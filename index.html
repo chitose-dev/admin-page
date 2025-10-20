@@ -742,6 +742,7 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="editPlanFromDetail()" id="editPlanFromDetailBtn">編集</button>
                 <button class="btn btn-secondary" id="closePlanDetailBtn2">閉じる</button>
             </div>
         </div>
@@ -750,6 +751,7 @@
     <script>
         // グローバル変数
         let currentFilter = 'all';
+        let currentPlanId = null; // 現在表示中のプランID
 
         // LocalStorageキー
         const STORAGE_KEYS = {
@@ -990,6 +992,13 @@
                 applications[index].status = 'cancelled';
                 applications[index].lastSendDate = lastSendDate;
                 localStorage.setItem(STORAGE_KEYS.APPLICATIONS, JSON.stringify(applications));
+                
+                // 現在のページやモーダルに応じて再読み込み
+                if (document.getElementById('planDetailModal').classList.contains('active')) {
+                    const planName = document.getElementById('planDetailTitle').textContent.replace(' - 詳細', '');
+                    loadPlanCustomers(planName);
+                }
+                
                 loadApplications(currentFilter);
                 loadDashboard();
                 alert(`解約処理が完了しました。最終送信日: ${lastSendDate}`);
@@ -1019,6 +1028,7 @@
             plans.forEach(plan => {
                 const planCard = document.createElement('div');
                 planCard.className = 'plan-card';
+                planCard.style.cursor = 'pointer';
                 planCard.innerHTML = `
                     <h3>${plan.name}</h3>
                     <div class="plan-details">
@@ -1028,11 +1038,98 @@
                         <p style="font-size: 13px; color: #666;">${plan.prompt.substring(0, 100)}...</p>
                     </div>
                     <div class="plan-actions">
-                        <button class="btn btn-secondary" onclick="editPlan(${plan.id})">編集</button>
-                        <button class="btn btn-danger" onclick="deletePlan(${plan.id})">削除</button>
+                        <button class="btn" onclick="event.stopPropagation(); showPlanDetail(${plan.id})" style="background: #007bff;">詳細</button>
+                        <button class="btn btn-danger" onclick="event.stopPropagation(); deletePlan(${plan.id})">削除</button>
                     </div>
                 `;
+                planCard.onclick = function() { showPlanDetail(plan.id); };
                 planGrid.appendChild(planCard);
+            });
+        }
+
+        // プラン詳細表示
+        function showPlanDetail(planId) {
+            const plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
+            const plan = plans.find(p => p.id === planId);
+            
+            if (!plan) return;
+            
+            currentPlanId = planId; // 現在のプランIDを保存
+            
+            document.getElementById('planDetailTitle').textContent = `${plan.name} - 詳細`;
+            
+            // プラン情報表示
+            const planDetailInfo = document.getElementById('planDetailInfo');
+            planDetailInfo.innerHTML = `
+                <div class="info-row">
+                    <div class="info-label">プラン名:</div>
+                    <div class="info-value">${plan.name}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">使用モデル:</div>
+                    <div class="info-value">${plan.model}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">送信時刻:</div>
+                    <div class="info-value">${plan.sendTime}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">プロンプト:</div>
+                    <div class="info-value" style="white-space: pre-wrap;">${plan.prompt}</div>
+                </div>
+            `;
+            
+            // 加入者一覧を読み込み
+            loadPlanCustomers(plan.name);
+            
+            document.getElementById('planDetailModal').classList.add('active');
+        }
+
+        // プラン詳細から編集モーダルを開く
+        function editPlanFromDetail() {
+            if (currentPlanId) {
+                document.getElementById('planDetailModal').classList.remove('active');
+                editPlan(currentPlanId);
+            }
+        }
+
+        // プラン加入者一覧読み込み
+        function loadPlanCustomers(planName, searchQuery = '') {
+            const applications = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICATIONS) || '[]');
+            const tbody = document.querySelector('#planCustomersTable tbody');
+            tbody.innerHTML = '';
+            
+            // プランに加入している承認済みユーザーをフィルター
+            let customers = applications.filter(app => 
+                app.plan === planName && app.status === 'approved'
+            );
+            
+            // 検索フィルター
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                customers = customers.filter(customer => 
+                    customer.fullName.toLowerCase().includes(query) ||
+                    customer.memberNumber.toLowerCase().includes(query)
+                );
+            }
+            
+            if (customers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">該当する加入者がいません</td></tr>';
+                return;
+            }
+            
+            customers.forEach(customer => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${customer.memberNumber}</td>
+                    <td>${customer.fullName}</td>
+                    <td>${customer.email}</td>
+                    <td>${customer.appliedDate}</td>
+                    <td>
+                        <button class="action-btn btn-danger" onclick="cancelSubscription(${customer.id})">解約</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
             });
         }
 
@@ -1239,6 +1336,20 @@
             });
             document.getElementById('closePlanModalBtn2').addEventListener('click', function() {
                 document.getElementById('planModal').classList.remove('active');
+            });
+
+            // プラン詳細モーダル閉じるボタン
+            document.getElementById('closePlanDetailBtn').addEventListener('click', function() {
+                document.getElementById('planDetailModal').classList.remove('active');
+            });
+            document.getElementById('closePlanDetailBtn2').addEventListener('click', function() {
+                document.getElementById('planDetailModal').classList.remove('active');
+            });
+
+            // プラン加入者検索
+            document.getElementById('planCustomerSearch').addEventListener('input', function() {
+                const planName = document.getElementById('planDetailTitle').textContent.replace(' - 詳細', '');
+                loadPlanCustomers(planName, this.value);
             });
 
             // 日付フィルター
