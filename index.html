@@ -807,19 +807,24 @@
             }
         }
 
-        // ログイン処理
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const id = document.getElementById('loginId').value;
-            const password = document.getElementById('loginPassword').value;
+        // 初期化
+        initializeDummyData();
 
-            if (id === 'admin' && password === 'password') {
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('mainScreen').classList.add('active');
-                loadDashboard();
-            } else {
-                alert('IDまたはパスワードが正しくありません');
-            }
+        // ログイン処理
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const id = document.getElementById('loginId').value;
+                const password = document.getElementById('loginPassword').value;
+
+                if (id === 'admin' && password === 'password') {
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('mainScreen').classList.add('active');
+                    loadDashboard();
+                } else {
+                    alert('IDまたはパスワードが正しくありません');
+                }
+            });
         });
 
         // ログアウト
