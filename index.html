@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPTsメール送信システム - 管理画面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #ffffff;
+            color: #000000;
+        }
+
+        /* ログイン画面 */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            border: 2px solid #000;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h1 {
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #000;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #000;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: #333;
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: #000;
+            border: 1px solid #000;
+        }
+
+        .btn-secondary:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        /* メインレイアウト */
+        .main-container {
+            display: none;
+        }
+
+        .main-container.active {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* サイドバー */
+        .sidebar {
+            width: 250px;
+            background: #000;
+            color: #fff;
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .sidebar-menu li {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .sidebar-menu li:hover {
+            background: #333;
+        }
+
+        .sidebar-menu li.active {
+            background: #fff;
+            color: #000;
+        }
+
+        .logout-btn {
+            margin: 20px;
+        }
+
+        /* コンテンツエリア */
+        .content {
+            margin-left: 250px;
+            padding: 30px;
+            flex: 1;
+        }
+
+        .content-header {
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #000;
+        }
+
+        .content-header h1 {
+            font-size: 28px;
+        }
+
+        /* カード */
+        .card {
+            background: #fff;
+            border: 1px solid #000;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .card-header h2 {
+            font-size: 20px;
+        }
+
+        /* 統計カード */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border: 2px solid #000;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        /* テーブル */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th,
+        table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+            background: #000;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        table tr:hover {
+            background: #f5f5f5;
+        }
+
+        /* フィルター */
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #000;
+            background: #fff;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .filter-btn.active {
+            background: #000;
+            color: #fff;
+        }
+
+        /* モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            border: 2px solid #000;
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #000;
+        }
+
+        .modal-header h2 {
+            font-size: 22px;
+        }
+
+        .close-btn {
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+            border: none;
+            background: none;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* バッジ */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid #000;
+        }
+
+        .badge-pending {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .badge-approved {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .badge-rejected {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        /* アクションボタン */
+        .action-btns {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: 1px solid #000;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            background: #f0f0f0;
+        }
+
+        /* プランカード */
+        .plan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .plan-card {
+            border: 2px solid #000;
+            padding: 20px;
+        }
+
+        .plan-card h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .plan-details {
+            margin: 15px 0;
+        }
+
+        .plan-details p {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .plan-details strong {
+            font-weight: 600;
+        }
+
+        .plan-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .content {
+                margin-left: 0;
+            }
+
+            .main-container {
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .plan-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .filter-btn {
+                width: 100%;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            table th,
+            table td {
+                padding: 8px;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .info-row {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            width: 150px;
+        }
+
+        .info-value {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- ログイン画面 -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h1>管理画面ログイン</h1>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>ユーザーID</label>
+                    <input type="text" id="loginId" required>
+                </div>
+                <div class="form-group">
+                    <label>パスワード</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">ログイン</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- メイン管理画面 -->
+    <div id="mainScreen" class="main-container">
+        <!-- サイドバー -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>管理画面</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li data-page="dashboard" class="active">ダッシュボード</li>
+                <li data-page="applications">申請者管理</li>
+                <li data-page="plans">プラン管理</li>
+                <li data-page="history">送信履歴</li>
+                <li data-page="manual-send">手動メール送信</li>
+                <li data-page="settings">設定</li>
+            </ul>
+            <button class="btn logout-btn" onclick="logout()">ログアウト</button>
+        </div>
+
+        <!-- コンテンツエリア -->
+        <div class="content">
+            <!-- ダッシュボード -->
+            <div id="dashboard" class="page-content">
+                <div class="content-header">
+                    <h1>ダッシュボード</h1>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>総申請数</h3>
+                        <div class="value" id="totalApplications">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>承認待ち</h3>
+                        <div class="value" id="pendingApplications">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>承認済み</h3>
+                        <div class="value" id="approvedApplications">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>総プラン数</h3>
+                        <div class="value" id="totalPlans">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 申請者管理 -->
+            <div id="applications" class="page-content hidden">
+                <div class="content-header">
+                    <h1>申請者管理</h1>
+                </div>
+                <div class="card">
+                    <div class="filters">
+                        <button class="filter-btn active" data-status="all">全て</button>
+                        <button class="filter-btn" data-status="pending">承認待ち</button>
+                        <button class="filter-btn" data-status="approved">承認済み</button>
+                        <button class="filter-btn" data-status="rejected">却下</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="applicationsTable">
+                            <thead>
+                                <tr>
+                                    <th>会員番号</th>
+                                    <th>ステータス</th>
+                                    <th>プラン</th>
+                                    <th>申請日</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- プラン管理 -->
+            <div id="plans" class="page-content hidden">
+                <div class="content-header">
+                    <h1>プラン管理</h1>
+                </div>
+                <button class="btn" onclick="showAddPlanModal()" style="margin-bottom: 20px;">新規プラン追加</button>
+                <div class="plan-grid" id="planGrid"></div>
+            </div>
+
+            <!-- 送信履歴 -->
+            <div id="history" class="page-content hidden">
+                <div class="content-header">
+                    <h1>メール送信履歴</h1>
+                </div>
+                <div class="card">
+                    <div class="form-group" style="max-width: 300px; margin-bottom: 20px;">
+                        <label>日付絞り込み</label>
+                        <input type="date" id="historyDateFilter">
+                    </div>
+                    <div class="table-container">
+                        <table id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>送信日時</th>
+                                    <th>プラン</th>
+                                    <th>送信数</th>
+                                    <th>ステータス</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 手動メール送信 -->
+            <div id="manual-send" class="page-content hidden">
+                <div class="content-header">
+                    <h1>手動メール送信</h1>
+                </div>
+                <div class="card">
+                    <form id="manualSendForm">
+                        <div class="form-group">
+                            <label>対象プラン</label>
+                            <select id="manualSendPlan" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>件名</label>
+                            <input type="text" id="manualSendSubject" required>
+                        </div>
+                        <div class="form-group">
+                            <label>本文</label>
+                            <textarea id="manualSendBody" required></textarea>
+                        </div>
+                        <button type="submit" class="btn">送信</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 設定 -->
+            <div id="settings" class="page-content hidden">
+                <div class="content-header">
+                    <h1>設定</h1>
+                </div>
+                <div class="card">
+                    <h2>API設定</h2>
+                    <form id="apiSettingsForm">
+                        <div class="form-group">
+                            <label>OpenAI API Key（全プラン共通）</label>
+                            <input type="text" id="apiKey" placeholder="sk-...">
+                        </div>
+                        <button type="submit" class="btn">保存</button>
+                    </form>
+                </div>
+                <div class="card">
+                    <h2>メールテンプレート設定</h2>
+                    <form id="emailTemplateForm">
+                        <div class="form-group">
+                            <label>デフォルト件名</label>
+                            <input type="text" id="emailSubject" placeholder="【お知らせ】本日の配信">
+                        </div>
+                        <div class="form-group">
+                            <label>デフォルト本文テンプレート</label>
+                            <textarea id="emailBody" placeholder="{{name}}様&#10;&#10;本日の配信内容:&#10;{{content}}"></textarea>
+                        </div>
+                        <button type="submit" class="btn">保存</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 申請者詳細モーダル -->
+    <div id="applicationDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>申請者詳細</h2>
+                <button class="close-btn" onclick="closeModal('applicationDetailModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="applicationDetailBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('applicationDetailModal')">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- プラン追加/編集モーダル -->
+    <div id="planModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="planModalTitle">プラン追加</h2>
+                <button class="close-btn" onclick="closeModal('planModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="planForm">
+                    <input type="hidden" id="planId">
+                    <div class="form-group">
+                        <label>プラン名</label>
+                        <input type="text" id="planName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>プロンプトテンプレート</label>
+                        <textarea id="planPrompt" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>使用モデル</label>
+                        <select id="planModel" required>
+                            <option value="gpt-4o">GPT-4o</option>
+                            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>メール送信時刻</label>
+                        <input type="time" id="planSendTime" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('planModal')">キャンセル</button>
+                <button class="btn" onclick="savePlan()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // LocalStorageキー
+        const STORAGE_KEYS = {
+            APPLICATIONS: 'gpts_applications',
+            PLANS: 'gpts_plans',
+            HISTORY: 'gpts_history',
+            SETTINGS: 'gpts_settings'
+        };
+
+        // ダミーデータの初期化
+        function initializeDummyData() {
+            if (!localStorage.getItem(STORAGE_KEYS.APPLICATIONS)) {
+                const applications = [
+                    {
+                        id: 1,
+                        memberNumber: 'NOTE-2024-0001',
+                        fullName: '山田太郎',
+                        birthDate: '1990-05-15',
+                        email: 'yamada@example.com',
+                        plan: 'ベーシックプラン',
+                        status: 'pending',
+                        appliedDate: '2024-10-15'
+                    },
+                    {
+                        id: 2,
+                        memberNumber: 'NOTE-2024-0002',
+                        fullName: '佐藤花子',
+                        birthDate: '1985-08-22',
+                        email: 'sato@example.com',
+                        plan: 'プレミアムプラン',
+                        status: 'approved',
+                        appliedDate: '2024-10-10'
+                    },
+                    {
+                        id: 3,
+                        memberNumber: 'NOTE-2024-0003',
+                        fullName: '鈴木一郎',
+                        birthDate: '1992-03-10',
+                        email: 'suzuki@example.com',
+                        plan: 'ベーシックプラン',
+                        status: 'rejected',
+                        appliedDate: '2024-10-12'
+                    }
+                ];
+                localStorage.setItem(STORAGE_KEYS.APPLICATIONS, JSON.stringify(applications));
+            }
+
+            if (!localStorage.getItem(STORAGE_KEYS.PLANS)) {
+                const plans = [
+                    {
+                        id: 1,
+                        name: 'ベーシックプラン',
+                        prompt: 'あなたは親切なアシスタントです。ユーザーの生年月日に基づいて、今日の運勢をお伝えしてください。',
+                        model: 'gpt-3.5-turbo',
+                        sendTime: '09:00'
+                    },
+                    {
+                        id: 2,
+                        name: 'プレミアムプラン',
+                        prompt: 'あなたは占星術の専門家です。ユーザーの生年月日に基づいて、詳細な今日の運勢と具体的なアドバイスを提供してください。',
+                        model: 'gpt-4o',
+                        sendTime: '08:00'
+                    }
+                ];
+                localStorage.setItem(STORAGE_KEYS.PLANS, JSON.stringify(plans));
+            }
+
+            if (!localStorage.getItem(STORAGE_KEYS.HISTORY)) {
+                const history = [
+                    {
+                        id: 1,
+                        date: '2024-10-20 09:00',
+                        plan: 'ベーシックプラン',
+                        count: 15,
+                        status: '送信完了'
+                    },
+                    {
+                        id: 2,
+                        date: '2024-10-20 08:00',
+                        plan: 'プレミアムプラン',
+                        count: 8,
+                        status: '送信完了'
+                    },
+                    {
+                        id: 3,
+                        date: '2024-10-19 09:00',
+                        plan: 'ベーシックプラン',
+                        count: 14,
+                        status: '送信完了'
+                    }
+                ];
+                localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
+            }
+
+            if (!localStorage.getItem(STORAGE_KEYS.SETTINGS)) {
+                const settings = {
+                    apiKey: '',
+                    emailSubject: '【お知らせ】本日の配信',
+                    emailBody: '{{name}}様\n\n本日の配信内容:\n{{content}}'
+                };
+                localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+            }
+        }
+
+        // ログイン処理
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('loginId').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (id === 'admin' && password === 'password') {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainScreen').classList.add('active');
+                loadDashboard();
+            } else {
+                alert('IDまたはパスワードが正しくありません');
+            }
+        });
+
+        // ログアウト
+        function logout() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('mainScreen').classList.remove('active');
+            document.getElementById('loginForm').reset();
+        }
+
+        // ページ切り替え
+        document.querySelectorAll('.sidebar-menu li').forEach(item => {
+            item.addEventListener('click', function() {
+                const page = this.getAttribute('data-page');
+                
+                document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.querySelectorAll('.page-content').forEach(content => content.classList.add('hidden'));
+                document.getElementById(page).classList.remove('hidden');
+
+                switch(page) {
+                    case 'dashboard':
+                        loadDashboard();
+                        break;
+                    case 'applications':
+                        loadApplications();
+                        break;
+                    case 'plans':
+                        loadPlans();
+                        break;
+                    case 'history':
+                        loadHistory();
+                        break;
+                    case 'manual-send':
+                        loadManualSend();
+                        break;
+                    case 'settings':
+                        loadSettings();
+                        break;
+                }
+            });
+        });
+
+        // ダッシュボード読み込み
+        function loadDashboard() {
+            const applications = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICATIONS) || '[]');
+            const plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
+
+            document.getElementById('totalApplications').textContent = applications.length;
+            document.getElementById('pendingApplications').textContent = applications.filter(a => a.status === 'pending').length;
+            document.getElementById('approvedApplications').textContent = applications.filter(a => a.status === 'approved').length;
+            document.getElementById('totalPlans').textContent = plans.length;
+        }
+
+        // 申請者一覧読み込み
+        function loadApplications(filterStatus = 'all') {
+            const applications = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICATIONS) || '[]');
+            const tbody = document.querySelector('#applicationsTable tbody');
+            tbody.innerHTML = '';
+
+            const filtered = filterStatus === 'all' 
+                ? applications 
+                : applications.filter(a => a.status === filterStatus);
+
+            filtered.forEach(app => {
+                const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                tr.innerHTML = `
+                    <td>${app.memberNumber}</td>
+                    <td><span class="badge badge-${app.status}">${getStatusText(app.status)}</span></td>
+                    <td>${app.plan}</td>
+                    <td>${app.appliedDate}</td>
+                    <td class="action-btns">
+                        ${app.status === 'pending' ? `
+                            <button class="action-btn" onclick="event.stopPropagation(); updateApplicationStatus(${app.id}, 'approved')">承認</button>
+                            <button class="action-btn" onclick="event.stopPropagation(); updateApplicationStatus(${app.id}, 'rejected')">却下</button>
+                        ` : ''}
+                    </td>
+                `;
+                tr.addEventListener('click', () => showApplicationDetail(app.id));
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ステータステキスト取得
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': '承認待ち',
+                'approved': '承認済み',
+                'rejected': '却下'
+            };
+            return statusMap[status] || status;
+        }
+
+        // 申請者詳細表示
+        function showApplicationDetail(id) {
+            const applications = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICATIONS) || '[]');
+            const app = applications.find(a => a.id === id);
+            
+            if (app) {
+                const detailBody = document.getElementById('applicationDetailBody');
+                detailBody.innerHTML = `
+会員番号:</div>
+                        <div class="info-value">${app.memberNumber}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">
