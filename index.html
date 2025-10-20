@@ -473,11 +473,11 @@
             <form id="loginForm">
                 <div class="form-group">
                     <label>ユーザーID</label>
-                    <input type="text" id="loginId" required>
+                    <input type="text" id="loginId" value="admin">
                 </div>
                 <div class="form-group">
                     <label>パスワード</label>
-                    <input type="password" id="loginPassword" required>
+                    <input type="password" id="loginPassword" value="password">
                 </div>
                 <button type="submit" class="btn" style="width: 100%;">ログイン</button>
             </form>
@@ -491,7 +491,7 @@
             <div class="sidebar-header">
                 <h2>管理画面</h2>
             </div>
-            <ul class="sidebar-menu">
+            <ul class="sidebar-menu" id="sidebarMenu">
                 <li data-page="dashboard" class="active">ダッシュボード</li>
                 <li data-page="applications">申請者管理</li>
                 <li data-page="plans">プラン管理</li>
@@ -499,7 +499,7 @@
                 <li data-page="manual-send">手動メール送信</li>
                 <li data-page="settings">設定</li>
             </ul>
-            <button class="btn logout-btn" onclick="logout()">ログアウト</button>
+            <button class="btn logout-btn" id="logoutBtn">ログアウト</button>
         </div>
 
         <!-- コンテンツエリア -->
@@ -535,7 +535,7 @@
                     <h1>申請者管理</h1>
                 </div>
                 <div class="card">
-                    <div class="filters">
+                    <div class="filters" id="statusFilters">
                         <button class="filter-btn active" data-status="all">全て</button>
                         <button class="filter-btn" data-status="pending">承認待ち</button>
                         <button class="filter-btn" data-status="approved">承認済み</button>
@@ -563,7 +563,7 @@
                 <div class="content-header">
                     <h1>プラン管理</h1>
                 </div>
-                <button class="btn" onclick="showAddPlanModal()" style="margin-bottom: 20px;">新規プラン追加</button>
+                <button class="btn" id="addPlanBtn" style="margin-bottom: 20px;">新規プラン追加</button>
                 <div class="plan-grid" id="planGrid"></div>
             </div>
 
@@ -655,11 +655,11 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>申請者詳細</h2>
-                <button class="close-btn" onclick="closeModal('applicationDetailModal')">&times;</button>
+                <button class="close-btn" id="closeAppDetailBtn">&times;</button>
             </div>
             <div class="modal-body" id="applicationDetailBody"></div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('applicationDetailModal')">閉じる</button>
+                <button class="btn btn-secondary" id="closeAppDetailBtn2">閉じる</button>
             </div>
         </div>
     </div>
@@ -669,7 +669,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="planModalTitle">プラン追加</h2>
-                <button class="close-btn" onclick="closeModal('planModal')">&times;</button>
+                <button class="close-btn" id="closePlanModalBtn">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="planForm">
@@ -697,13 +697,16 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('planModal')">キャンセル</button>
-                <button class="btn" onclick="savePlan()">保存</button>
+                <button class="btn btn-secondary" id="closePlanModalBtn2">キャンセル</button>
+                <button class="btn" id="savePlanBtn">保存</button>
             </div>
         </div>
     </div>
 
     <script>
+        // グローバル変数
+        let currentFilter = 'all';
+
         // LocalStorageキー
         const STORAGE_KEYS = {
             APPLICATIONS: 'gpts_applications',
@@ -807,66 +810,15 @@
             }
         }
 
-        // 初期化
-        initializeDummyData();
-
-        // ログイン処理
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('loginForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const id = document.getElementById('loginId').value;
-                const password = document.getElementById('loginPassword').value;
-
-                if (id === 'admin' && password === 'password') {
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('mainScreen').classList.add('active');
-                    loadDashboard();
-                } else {
-                    alert('IDまたはパスワードが正しくありません');
-                }
-            });
-        });
-
-        // ログアウト
-        function logout() {
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('mainScreen').classList.remove('active');
-            document.getElementById('loginForm').reset();
+        // ステータステキスト取得
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': '承認待ち',
+                'approved': '承認済み',
+                'rejected': '却下'
+            };
+            return statusMap[status] || status;
         }
-
-        // ページ切り替え
-        document.querySelectorAll('.sidebar-menu li').forEach(item => {
-            item.addEventListener('click', function() {
-                const page = this.getAttribute('data-page');
-                
-                document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
-                this.classList.add('active');
-                
-                document.querySelectorAll('.page-content').forEach(content => content.classList.add('hidden'));
-                document.getElementById(page).classList.remove('hidden');
-
-                switch(page) {
-                    case 'dashboard':
-                        loadDashboard();
-                        break;
-                    case 'applications':
-                        loadApplications();
-                        break;
-                    case 'plans':
-                        loadPlans();
-                        break;
-                    case 'history':
-                        loadHistory();
-                        break;
-                    case 'manual-send':
-                        loadManualSend();
-                        break;
-                    case 'settings':
-                        loadSettings();
-                        break;
-                }
-            });
-        });
 
         // ダッシュボード読み込み
         function loadDashboard() {
@@ -881,6 +833,7 @@
 
         // 申請者一覧読み込み
         function loadApplications(filterStatus = 'all') {
+            currentFilter = filterStatus;
             const applications = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICATIONS) || '[]');
             const tbody = document.querySelector('#applicationsTable tbody');
             tbody.innerHTML = '';
@@ -897,26 +850,16 @@
                     <td><span class="badge badge-${app.status}">${getStatusText(app.status)}</span></td>
                     <td>${app.plan}</td>
                     <td>${app.appliedDate}</td>
-                    <td class="action-btns">
+                    <td class="action-btns" onclick="event.stopPropagation()">
                         ${app.status === 'pending' ? `
-                            <button class="action-btn" onclick="event.stopPropagation(); updateApplicationStatus(${app.id}, 'approved')">承認</button>
-                            <button class="action-btn" onclick="event.stopPropagation(); updateApplicationStatus(${app.id}, 'rejected')">却下</button>
+                            <button class="action-btn" onclick="updateApplicationStatus(${app.id}, 'approved')">承認</button>
+                            <button class="action-btn" onclick="updateApplicationStatus(${app.id}, 'rejected')">却下</button>
                         ` : ''}
                     </td>
                 `;
-                tr.addEventListener('click', () => showApplicationDetail(app.id));
+                tr.onclick = function() { showApplicationDetail(app.id); };
                 tbody.appendChild(tr);
             });
-        }
-
-        // ステータステキスト取得
-        function getStatusText(status) {
-            const statusMap = {
-                'pending': '承認待ち',
-                'approved': '承認済み',
-                'rejected': '却下'
-            };
-            return statusMap[status] || status;
         }
 
         // 申請者詳細表示
@@ -927,8 +870,324 @@
             if (app) {
                 const detailBody = document.getElementById('applicationDetailBody');
                 detailBody.innerHTML = `
-会員番号:</div>
+                    <div class="info-row">
+                        <div class="info-label">会員番号:</div>
                         <div class="info-value">${app.memberNumber}</div>
                     </div>
                     <div class="info-row">
-                        <div class="info-label">
+                        <div class="info-label">氏名:</div>
+                        <div class="info-value">${app.fullName}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">生年月日:</div>
+                        <div class="info-value">${app.birthDate}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">メールアドレス:</div>
+                        <div class="info-value">${app.email}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">プラン:</div>
+                        <div class="info-value">${app.plan}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">ステータス:</div>
+                        <div class="info-value"><span class="badge badge-${app.status}">${getStatusText(app.status)}</span></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">申請日:</div>
+                        <div class="info-value">${app.appliedDate}</div>
+                    </div>
+                `;
+                document.getElementById('applicationDetailModal').classList.add('active');
+            }
+        }
+
+        // 申請ステータス更新
+        function updateApplicationStatus(id, newStatus) {
+            const applications = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICATIONS) || '[]');
+            const index = applications.findIndex(a => a.id === id);
+            
+            if (index !== -1) {
+                applications[index].status = newStatus;
+                localStorage.setItem(STORAGE_KEYS.APPLICATIONS, JSON.stringify(applications));
+                loadApplications(currentFilter);
+                loadDashboard();
+                alert(`申請を${getStatusText(newStatus)}しました`);
+            }
+        }
+
+        // プラン一覧読み込み
+        function loadPlans() {
+            const plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
+            const planGrid = document.getElementById('planGrid');
+            planGrid.innerHTML = '';
+
+            plans.forEach(plan => {
+                const planCard = document.createElement('div');
+                planCard.className = 'plan-card';
+                planCard.innerHTML = `
+                    <h3>${plan.name}</h3>
+                    <div class="plan-details">
+                        <p><strong>使用モデル:</strong> ${plan.model}</p>
+                        <p><strong>送信時刻:</strong> ${plan.sendTime}</p>
+                        <p><strong>プロンプト:</strong></p>
+                        <p style="font-size: 13px; color: #666;">${plan.prompt.substring(0, 100)}...</p>
+                    </div>
+                    <div class="plan-actions">
+                        <button class="btn btn-secondary" onclick="editPlan(${plan.id})">編集</button>
+                        <button class="btn btn-danger" onclick="deletePlan(${plan.id})">削除</button>
+                    </div>
+                `;
+                planGrid.appendChild(planCard);
+            });
+        }
+
+        // プラン追加モーダル表示
+        function showAddPlanModal() {
+            document.getElementById('planModalTitle').textContent = 'プラン追加';
+            document.getElementById('planForm').reset();
+            document.getElementById('planId').value = '';
+            document.getElementById('planModal').classList.add('active');
+        }
+
+        // プラン編集
+        function editPlan(id) {
+            const plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
+            const plan = plans.find(p => p.id === id);
+            
+            if (plan) {
+                document.getElementById('planModalTitle').textContent = 'プラン編集';
+                document.getElementById('planId').value = plan.id;
+                document.getElementById('planName').value = plan.name;
+                document.getElementById('planPrompt').value = plan.prompt;
+                document.getElementById('planModel').value = plan.model;
+                document.getElementById('planSendTime').value = plan.sendTime;
+                document.getElementById('planModal').classList.add('active');
+            }
+        }
+
+        // プラン保存
+        function savePlan() {
+            const id = document.getElementById('planId').value;
+            const name = document.getElementById('planName').value;
+            const prompt = document.getElementById('planPrompt').value;
+            const model = document.getElementById('planModel').value;
+            const sendTime = document.getElementById('planSendTime').value;
+
+            if (!name || !prompt || !model || !sendTime) {
+                alert('全ての項目を入力してください');
+                return;
+            }
+
+            let plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
+
+            if (id) {
+                const index = plans.findIndex(p => p.id === parseInt(id));
+                if (index !== -1) {
+                    plans[index] = { ...plans[index], name, prompt, model, sendTime };
+                }
+            } else {
+                const newId = plans.length > 0 ? Math.max(...plans.map(p => p.id)) + 1 : 1;
+                plans.push({ id: newId, name, prompt, model, sendTime });
+            }
+
+            localStorage.setItem(STORAGE_KEYS.PLANS, JSON.stringify(plans));
+            document.getElementById('planModal').classList.remove('active');
+            loadPlans();
+            loadDashboard();
+            alert('プランを保存しました');
+        }
+
+        // プラン削除
+        function deletePlan(id) {
+            if (confirm('このプランを削除してもよろしいですか?')) {
+                let plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
+                plans = plans.filter(p => p.id !== id);
+                localStorage.setItem(STORAGE_KEYS.PLANS, JSON.stringify(plans));
+                loadPlans();
+                loadDashboard();
+                alert('プランを削除しました');
+            }
+        }
+
+        // 送信履歴読み込み
+        function loadHistory(filterDate = null) {
+            const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
+            const tbody = document.querySelector('#historyTable tbody');
+            tbody.innerHTML = '';
+
+            const filtered = filterDate 
+                ? history.filter(item => item.date.startsWith(filterDate))
+                : history;
+
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.date}</td>
+                    <td>${item.plan}</td>
+                    <td>${item.count}件</td>
+                    <td>${item.status}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 手動メール送信画面読み込み
+        function loadManualSend() {
+            const plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
+            const select = document.getElementById('manualSendPlan');
+            select.innerHTML = '';
+
+            plans.forEach(plan => {
+                const option = document.createElement('option');
+                option.value = plan.id;
+                option.textContent = plan.name;
+                select.appendChild(option);
+            });
+        }
+
+        // 設定読み込み
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem(STORAGE_KEYS.SETTINGS) || '{}');
+            document.getElementById('apiKey').value = settings.apiKey || '';
+            document.getElementById('emailSubject').value = settings.emailSubject || '';
+            document.getElementById('emailBody').value = settings.emailBody || '';
+        }
+
+        // ページ切り替え
+        function switchPage(pageName) {
+            document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
+            document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+            
+            document.querySelectorAll('.page-content').forEach(content => content.classList.add('hidden'));
+            document.getElementById(pageName).classList.remove('hidden');
+
+            switch(pageName) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'applications':
+                    loadApplications();
+                    break;
+                case 'plans':
+                    loadPlans();
+                    break;
+                case 'history':
+                    loadHistory();
+                    break;
+                case 'manual-send':
+                    loadManualSend();
+                    break;
+                case 'settings':
+                    loadSettings();
+                    break;
+            }
+        }
+
+        // 初期化とイベントリスナー設定
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDummyData();
+
+            // ログインフォーム
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const id = document.getElementById('loginId').value;
+                const password = document.getElementById('loginPassword').value;
+
+                if (id === 'admin' && password === 'password') {
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('mainScreen').classList.add('active');
+                    loadDashboard();
+                } else {
+                    alert('IDまたはパスワードが正しくありません');
+                }
+            });
+
+            // ログアウト
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('mainScreen').classList.remove('active');
+                document.getElementById('loginForm').reset();
+            });
+
+            // サイドバーメニュー
+            document.querySelectorAll('#sidebarMenu li').forEach(item => {
+                item.addEventListener('click', function() {
+                    const page = this.getAttribute('data-page');
+                    switchPage(page);
+                });
+            });
+
+            // フィルターボタン
+            document.querySelectorAll('#statusFilters .filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#statusFilters .filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    loadApplications(this.getAttribute('data-status'));
+                });
+            });
+
+            // プラン追加ボタン
+            document.getElementById('addPlanBtn').addEventListener('click', showAddPlanModal);
+
+            // プラン保存ボタン
+            document.getElementById('savePlanBtn').addEventListener('click', savePlan);
+
+            // モーダル閉じるボタン
+            document.getElementById('closeAppDetailBtn').addEventListener('click', function() {
+                document.getElementById('applicationDetailModal').classList.remove('active');
+            });
+            document.getElementById('closeAppDetailBtn2').addEventListener('click', function() {
+                document.getElementById('applicationDetailModal').classList.remove('active');
+            });
+            document.getElementById('closePlanModalBtn').addEventListener('click', function() {
+                document.getElementById('planModal').classList.remove('active');
+            });
+            document.getElementById('closePlanModalBtn2').addEventListener('click', function() {
+                document.getElementById('planModal').classList.remove('active');
+            });
+
+            // 日付フィルター
+            document.getElementById('historyDateFilter').addEventListener('change', function() {
+                loadHistory(this.value);
+            });
+
+            // 手動メール送信フォーム
+            document.getElementById('manualSendForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const planId = document.getElementById('manualSendPlan').value;
+                const subject = document.getElementById('manualSendSubject').value;
+                const body = document.getElementById('manualSendBody').value;
+
+                const plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
+                const plan = plans.find(p => p.id === parseInt(planId));
+
+                if (confirm(`${plan.name}の全加入者にメールを送信しますか?`)) {
+                    alert('メール送信を開始しました');
+                    this.reset();
+                }
+            });
+
+            // API設定保存
+            document.getElementById('apiSettingsForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const settings = JSON.parse(localStorage.getItem(STORAGE_KEYS.SETTINGS) || '{}');
+                settings.apiKey = document.getElementById('apiKey').value;
+                localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+                alert('API設定を保存しました');
+            });
+
+            // メールテンプレート保存
+            document.getElementById('emailTemplateForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const settings = JSON.parse(localStorage.getItem(STORAGE_KEYS.SETTINGS) || '{}');
+                settings.emailSubject = document.getElementById('emailSubject').value;
+                settings.emailBody = document.getElementById('emailBody').value;
+                localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+                alert('メールテンプレートを保存しました');
+            });
+        });
+    </script>
+</body>
+</html>
