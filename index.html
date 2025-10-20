@@ -114,6 +114,8 @@
             position: fixed;
             height: 100vh;
             overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
         }
 
         .sidebar-header {
@@ -147,6 +149,40 @@
 
         .logout-btn {
             margin: 20px;
+        }
+
+        /* ハンバーガーメニュー */
+        .hamburger {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 200;
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        .hamburger:hover {
+            background: #333;
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 90;
+        }
+
+        .mobile-overlay.active {
+            display: block;
         }
 
         /* コンテンツエリア */
@@ -406,14 +442,21 @@
 
         /* レスポンシブ */
         @media (max-width: 768px) {
+            .hamburger {
+                display: block;
+            }
+
             .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
             }
 
             .content {
                 margin-left: 0;
+                padding: 80px 20px 30px;
             }
 
             .main-container {
@@ -443,6 +486,10 @@
             table th,
             table td {
                 padding: 8px;
+            }
+
+            .modal-content {
+                padding: 20px;
             }
         }
 
@@ -573,8 +620,14 @@
 
     <!-- メイン管理画面 -->
     <div id="mainScreen" class="main-container">
+        <!-- ハンバーガーメニューボタン -->
+        <button class="hamburger" id="hamburgerBtn">☰</button>
+
+        <!-- モバイル用オーバーレイ -->
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+
         <!-- サイドバー -->
-        <div class="sidebar">
+        <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2>管理画面</h2>
             </div>
@@ -1586,6 +1639,35 @@
         document.addEventListener('DOMContentLoaded', function() {
             initializeDummyData();
 
+            // ハンバーガーメニュー
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+
+            hamburgerBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+                mobileOverlay.classList.toggle('active');
+            });
+
+            mobileOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('active');
+                mobileOverlay.classList.remove('active');
+            });
+
+            // サイドバーメニュークリック時にモバイルではメニューを閉じる
+            document.querySelectorAll('#sidebarMenu li').forEach(item => {
+                item.addEventListener('click', function() {
+                    const page = this.getAttribute('data-page');
+                    switchPage(page);
+                    
+                    // モバイルでメニューを閉じる
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('active');
+                        mobileOverlay.classList.remove('active');
+                    }
+                });
+            });
+
             // ログインフォーム
             document.getElementById('loginForm').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -1606,15 +1688,13 @@
                 document.getElementById('loginScreen').style.display = 'flex';
                 document.getElementById('mainScreen').classList.remove('active');
                 document.getElementById('loginForm').reset();
+                
+                // サイドバーを閉じる
+                sidebar.classList.remove('active');
+                mobileOverlay.classList.remove('active');
             });
 
-            // サイドバーメニュー
-            document.querySelectorAll('#sidebarMenu li').forEach(item => {
-                item.addEventListener('click', function() {
-                    const page = this.getAttribute('data-page');
-                    switchPage(page);
-                });
-            });
+            // サイドバーメニュー（削除）
 
             // フィルターボタン
             document.querySelectorAll('#statusFilters .filter-btn').forEach(btn => {
