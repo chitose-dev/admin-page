@@ -345,6 +345,11 @@
             border-color: #dc3545;
         }
 
+        .badge-cancelled {
+            background: #e2e3e5;
+            border-color: #6c757d;
+        }
+
         /* アクションボタン */
         .action-btns {
             display: flex;
@@ -540,6 +545,7 @@
                         <button class="filter-btn" data-status="pending">承認待ち</button>
                         <button class="filter-btn" data-status="approved">承認済み</button>
                         <button class="filter-btn" data-status="rejected">却下</button>
+                        <button class="filter-btn" data-status="cancelled">解約済み</button>
                     </div>
                     <div class="table-container">
                         <table id="applicationsTable">
@@ -815,7 +821,8 @@
             const statusMap = {
                 'pending': '承認待ち',
                 'approved': '承認済み',
-                'rejected': '却下'
+                'rejected': '却下',
+                'cancelled': '解約済み'
             };
             return statusMap[status] || status;
         }
@@ -845,16 +852,30 @@
             filtered.forEach(app => {
                 const tr = document.createElement('tr');
                 tr.style.cursor = 'pointer';
+                
+                let actionButtons = '';
+                if (app.status === 'pending') {
+                    actionButtons = `
+                        <button class="action-btn" onclick="updateApplicationStatus(${app.id}, 'approved')">承認</button>
+                        <button class="action-btn" onclick="updateApplicationStatus(${app.id}, 'rejected')">却下</button>
+                    `;
+                } else if (app.status === 'rejected') {
+                    actionButtons = `
+                        <button class="action-btn" onclick="updateApplicationStatus(${app.id}, 'approved')">承認</button>
+                    `;
+                } else if (app.status === 'approved') {
+                    actionButtons = `
+                        <button class="action-btn btn-danger" onclick="cancelSubscription(${app.id})">解約</button>
+                    `;
+                }
+                
                 tr.innerHTML = `
                     <td>${app.memberNumber}</td>
                     <td><span class="badge badge-${app.status}">${getStatusText(app.status)}</span></td>
                     <td>${app.plan}</td>
                     <td>${app.appliedDate}</td>
                     <td class="action-btns" onclick="event.stopPropagation()">
-                        ${app.status === 'pending' ? `
-                            <button class="action-btn" onclick="updateApplicationStatus(${app.id}, 'approved')">承認</button>
-                            <button class="action-btn" onclick="updateApplicationStatus(${app.id}, 'rejected')">却下</button>
-                        ` : ''}
+                        ${actionButtons}
                     </td>
                 `;
                 tr.onclick = function() { showApplicationDetail(app.id); };
@@ -898,8 +919,42 @@
                         <div class="info-label">申請日:</div>
                         <div class="info-value">${app.appliedDate}</div>
                     </div>
+                    ${app.lastSendDate ? `
+                    <div class="info-row">
+                        <div class="info-label">最終送信日:</div>
+                        <div class="info-value">${app.lastSendDate}</div>
+                    </div>
+                    ` : ''}
                 `;
                 document.getElementById('applicationDetailModal').classList.add('active');
+            }
+        }
+
+        // 解約処理
+        function cancelSubscription(id) {
+            const lastSendDate = prompt('最終送信日を入力してください（YYYY-MM-DD形式）:');
+            
+            if (!lastSendDate) {
+                return; // キャンセル
+            }
+            
+            // 日付の妥当性チェック
+            const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+            if (!datePattern.test(lastSendDate)) {
+                alert('日付の形式が正しくありません。YYYY-MM-DD形式で入力してください。');
+                return;
+            }
+            
+            const applications = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICATIONS) || '[]');
+            const index = applications.findIndex(a => a.id === id);
+            
+            if (index !== -1) {
+                applications[index].status = 'cancelled';
+                applications[index].lastSendDate = lastSendDate;
+                localStorage.setItem(STORAGE_KEYS.APPLICATIONS, JSON.stringify(applications));
+                loadApplications(currentFilter);
+                loadDashboard();
+                alert(`解約処理が完了しました。最終送信日: ${lastSendDate}`);
             }
         }
 
