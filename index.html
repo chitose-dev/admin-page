@@ -709,6 +709,44 @@
         </div>
     </div>
 
+    <!-- プラン詳細モーダル -->
+    <div id="planDetailModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 id="planDetailTitle">プラン詳細</h2>
+                <button class="close-btn" id="closePlanDetailBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="planDetailInfo" style="margin-bottom: 20px;"></div>
+                
+                <h3 style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #000;">加入者一覧</h3>
+                
+                <div class="form-group" style="max-width: 400px; margin-bottom: 20px;">
+                    <label>検索（名前・会員番号）</label>
+                    <input type="text" id="planCustomerSearch" placeholder="山田太郎 または NOTE-2024-0001">
+                </div>
+                
+                <div class="table-container">
+                    <table id="planCustomersTable">
+                        <thead>
+                            <tr>
+                                <th>会員番号</th>
+                                <th>氏名</th>
+                                <th>メールアドレス</th>
+                                <th>登録日</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closePlanDetailBtn2">閉じる</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // グローバル変数
         let currentFilter = 'all';
