@@ -756,13 +756,28 @@
                         <textarea id="planPrompt" required placeholder="変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日"></textarea>
                     </div>
                     <div class="form-group">
-                        <label>使用モデル</label>
-                        <select id="planModel" required>
-                            <option value="gpt-4o">GPT-4o</option>
-                            <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                        </select>
-                    </div>
+    <label>使用モデル</label>
+    <select id="planModel" required>
+        <optgroup label="GPT-5シリーズ（最新）">
+            <option value="gpt-5">GPT-5</option>
+            <option value="gpt-5-chat-latest">GPT-5 Chat Latest</option>
+            <option value="gpt-5-mini">GPT-5 Mini</option>
+            <option value="gpt-5-nano">GPT-5 Nano</option>
+        </optgroup>
+        <optgroup label="o1シリーズ（推論モデル）">
+            <option value="o1-preview">o1-preview</option>
+            <option value="o1-mini">o1-mini</option>
+        </optgroup>
+        <optgroup label="GPT-4oシリーズ">
+            <option value="gpt-4o">GPT-4o</option>
+            <option value="gpt-4o-mini">GPT-4o-mini</option>
+            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+        </optgroup>
+        <optgroup label="旧モデル">
+            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+        </optgroup>
+    </select>
+</div>
                     <div class="form-group">
                         <label>メール送信時刻</label>
                         <input type="time" id="planSendTime" required>
