@@ -1148,7 +1148,7 @@
         // ========================================
         // プラン管理
         // ========================================
-        
+        let isSavingPlan = false;
         // プラン一覧読み込み
         async function loadPlans() {
             const planGrid = document.getElementById('planGrid');
@@ -1297,6 +1297,12 @@
         
         // プラン保存
         async function savePlan() {
+            // 連打防止チェック
+            if (isSavingPlan) {
+                console.log('既に保存処理中です');
+                return;
+            }
+    
             const id = document.getElementById('planId').value;
             const name = document.getElementById('planName').value;
             const prompt = document.getElementById('planPrompt').value;
@@ -1308,6 +1314,16 @@
                 return;
             }
 
+            // 保存中フラグをON
+            isSavingPlan = true;
+    
+            // ボタンを無効化
+            const saveBtn = document.getElementById('savePlanBtn');
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = '保存中...';
+            saveBtn.disabled = true;
+            saveBtn.classList.add('loading');
+
             try {
                 if (id) {
                     await apiCall(`/api/plans/${id}`, 'PUT', {
@@ -1318,12 +1334,20 @@
                         name, prompt, model, sendTime
                     });
                 }
-                
+        
                 document.getElementById('planModal').classList.remove('active');
                 loadPlans();
                 alert('プランを保存しました');
             } catch (error) {
                 alert(error.message);
+            } finally {
+                // 保存中フラグをOFF
+                isSavingPlan = false;
+        
+                // ボタンを元に戻す
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('loading');
             }
         }
         
