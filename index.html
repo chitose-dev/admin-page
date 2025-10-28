@@ -63,6 +63,13 @@
             min-height: 100px;
         }
 
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+
         .btn {
             padding: 10px 20px;
             background: #000;
@@ -93,6 +100,15 @@
 
         .btn-danger:hover {
             background: #c82333;
+        }
+
+        .btn-copy {
+            background: #007bff;
+            margin-left: 10px;
+        }
+
+        .btn-copy:hover {
+            background: #0056b3;
         }
 
         /* メインレイアウト */
@@ -420,6 +436,37 @@
             margin-top: 15px;
         }
 
+        /* API URL表示エリア */
+        .api-url-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 4px;
+        }
+
+        .api-url-box p {
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .url-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .url-text {
+            flex: 1;
+            padding: 8px;
+            background: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            word-break: break-all;
+        }
+
         /* レスポンシブ */
         @media (max-width: 768px) {
             .hamburger {
@@ -466,6 +513,10 @@
 
             .modal-content {
                 padding: 20px;
+            }
+
+            .url-display {
+                flex-direction: column;
             }
         }
 
@@ -636,10 +687,11 @@
                         <div class="form-group">
                             <label>件名</label>
                             <input type="text" id="manualSendSubject" required>
+                            <small>変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日, {today}=今日の日付(YYYY-MM-DD)</small>
                         </div>
                         <div class="form-group">
                             <label>本文</label>
-                            <textarea id="manualSendBody" required placeholder="変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日"></textarea>
+                            <textarea id="manualSendBody" required placeholder="変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日, {today}=今日の日付(YYYY-MM-DD)"></textarea>
                         </div>
                         <button type="submit" class="btn">送信</button>
                     </form>
@@ -669,35 +721,6 @@
                         </div>
                         <div id="passwordChangeMessage" class="hidden"></div>
                         <button type="submit" class="btn">変更</button>
-                    </form>
-                </div>
-
-                <div class="card">
-                    <h2>OpenAI API 設定</h2>
-                    <form id="openaiApiForm">
-                        <div class="form-group">
-                            <label>OpenAI API Key</label>
-                            <input type="text" id="openaiApiKey" placeholder="sk-...">
-                            <small>GPTでメール本文を自動生成するために必要です。設定画面から安全に変更できます。</small>
-                        </div>
-                        <div id="openaiApiMessage" class="hidden"></div>
-                        <button type="submit" class="btn">保存</button>
-                    </form>
-                </div>
-
-                <div class="card">
-                    <h2>メールテンプレート設定</h2>
-                    <form id="emailTemplateForm">
-                        <div class="form-group">
-                            <label>デフォルト件名</label>
-                            <input type="text" id="emailSubject" placeholder="【お知らせ】本日の配信">
-                        </div>
-                        <div class="form-group">
-                            <label>デフォルト本文テンプレート</label>
-                            <textarea id="emailBody" placeholder="{name-l}{name-f}様&#10;&#10;本日の配信内容:&#10;{{content}}"></textarea>
-                            <small>変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日, {{content}}=GPT生成内容</small>
-                        </div>
-                        <button type="submit" class="btn">保存</button>
                     </form>
                 </div>
                 
@@ -752,35 +775,18 @@
                         <input type="text" id="planName" required>
                     </div>
                     <div class="form-group">
-                        <label>プロンプトテンプレート</label>
-                        <textarea id="planPrompt" required placeholder="変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日"></textarea>
-                    </div>
-                    <div class="form-group">
-    <label>使用モデル</label>
-    <select id="planModel" required>
-        <optgroup label="GPT-5シリーズ（最新）">
-            <option value="gpt-5">GPT-5</option>
-            <option value="gpt-5-chat-latest">GPT-5 Chat Latest</option>
-            <option value="gpt-5-mini">GPT-5 Mini</option>
-            <option value="gpt-5-nano">GPT-5 Nano</option>
-        </optgroup>
-        <optgroup label="o1シリーズ（推論モデル）">
-            <option value="o1-preview">o1-preview</option>
-            <option value="o1-mini">o1-mini</option>
-        </optgroup>
-        <optgroup label="GPT-4oシリーズ">
-            <option value="gpt-4o">GPT-4o</option>
-            <option value="gpt-4o-mini">GPT-4o-mini</option>
-            <option value="gpt-4-turbo">GPT-4 Turbo</option>
-        </optgroup>
-        <optgroup label="旧モデル">
-            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-        </optgroup>
-    </select>
-</div>
-                    <div class="form-group">
                         <label>メール送信時刻</label>
                         <input type="time" id="planSendTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label>メール件名テンプレート</label>
+                        <input type="text" id="planEmailSubject" required placeholder="例: 【{name-l}様】本日のお知らせ">
+                        <small>変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日, {today}=今日の日付(YYYY-MM-DD)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>メール本文テンプレート</label>
+                        <textarea id="planEmailBody" required placeholder="例: {name-l}{name-f}様&#10;&#10;本日({today})の配信内容です。&#10;&#10;{{content}}"></textarea>
+                        <small>変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日, {today}=今日の日付(YYYY-MM-DD), {{content}}=GPTs生成内容</small>
                     </div>
                 </form>
             </div>
@@ -801,7 +807,21 @@
             <div class="modal-body">
                 <div id="planDetailInfo" style="margin-bottom: 20px;"></div>
                 
-                <h3 style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #000;">加入者一覧</h3>
+                <!-- GPTs用データ取得URL -->
+                <div class="api-url-box">
+                    <p>📋 GPTs用データ取得URL</p>
+                    <div class="url-display">
+                        <div class="url-text" id="planDataUrl">-</div>
+                        <button class="btn btn-copy" onclick="copyPlanUrl()">コピー</button>
+                    </div>
+                    <small style="display: block; margin-top: 10px; color: #666;">
+                        このURLをGPTsのActionsに設定することで、プラン加入者の情報を取得できます。<br>
+                        JSON形式: /api/public/plan-data/{planId}<br>
+                        TXT形式: /api/public/plan-data/{planId}?format=txt
+                    </small>
+                </div>
+                
+                <h3 style="margin: 25px 0 15px; padding-bottom: 10px; border-bottom: 2px solid #000;">加入者一覧</h3>
                 
                 <div class="form-group" style="max-width: 400px; margin-bottom: 20px;">
                     <label>検索（名前・会員番号）</label>
@@ -861,7 +881,7 @@
         // ========================================
         // 設定
         // ========================================
-       const API_BASE_URL = 'https://gpts-email-system-460540063355.asia-northeast1.run.app';
+        const API_BASE_URL = 'https://gpts-email-system-460540063355.asia-northeast1.run.app';
         
         // 認証トークン
         let authToken = localStorage.getItem('authToken') || null;
@@ -932,6 +952,17 @@
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('mainScreen').classList.remove('active');
             document.getElementById('loginForm').reset();
+        }
+
+        // プランURLコピー
+        function copyPlanUrl() {
+            const urlText = document.getElementById('planDataUrl').textContent;
+            navigator.clipboard.writeText(urlText).then(() => {
+                alert('URLをコピーしました');
+            }).catch(err => {
+                console.error('コピー失敗:', err);
+                alert('コピーに失敗しました');
+            });
         }
 
         // ========================================
@@ -1149,7 +1180,6 @@
                 });
                 
                 if (document.getElementById('planDetailModal').classList.contains('active')) {
-                    const planName = document.getElementById('planDetailTitle').textContent.replace(' - 詳細', '');
                     loadPlanCustomers(currentPlanId);
                 }
                 
@@ -1164,6 +1194,7 @@
         // プラン管理
         // ========================================
         let isSavingPlan = false;
+        
         // プラン一覧読み込み
         async function loadPlans() {
             const planGrid = document.getElementById('planGrid');
@@ -1183,13 +1214,19 @@
                     const planCard = document.createElement('div');
                     planCard.className = 'plan-card';
                     planCard.style.cursor = 'pointer';
+                    
+                    const subjectPreview = plan.emailSubject ? plan.emailSubject.substring(0, 50) : '-';
+                    const bodyPreview = plan.emailBody ? plan.emailBody.substring(0, 80) : '-';
+                    
                     planCard.innerHTML = `
                         <h3>${plan.name}</h3>
                         <div class="plan-details">
-                            <p><strong>使用モデル:</strong> ${plan.model}</p>
+                            <p><strong>プランID:</strong> ${plan.planId || '-'}</p>
                             <p><strong>送信時刻:</strong> ${plan.sendTime}</p>
-                            <p><strong>プロンプト:</strong></p>
-                            <p style="font-size: 13px; color: #666;">${plan.prompt.substring(0, 100)}...</p>
+                            <p><strong>件名:</strong></p>
+                            <p style="font-size: 13px; color: #666;">${subjectPreview}...</p>
+                            <p style="margin-top: 10px;"><strong>本文:</strong></p>
+                            <p style="font-size: 13px; color: #666;">${bodyPreview}...</p>
                         </div>
                         <div class="plan-actions">
                             <button class="btn" onclick="event.stopPropagation(); showPlanDetail('${plan.id}')" style="background: #007bff;">詳細</button>
@@ -1220,18 +1257,30 @@
                         <div class="info-value">${plan.name}</div>
                     </div>
                     <div class="info-row">
-                        <div class="info-label">使用モデル:</div>
-                        <div class="info-value">${plan.model}</div>
+                        <div class="info-label">プランID:</div>
+                        <div class="info-value" style="font-family: monospace;">${plan.planId || '未生成'}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">送信時刻:</div>
                         <div class="info-value">${plan.sendTime}</div>
                     </div>
                     <div class="info-row">
-                        <div class="info-label">プロンプト:</div>
-                        <div class="info-value" style="white-space: pre-wrap;">${plan.prompt}</div>
+                        <div class="info-label">件名テンプレート:</div>
+                        <div class="info-value">${plan.emailSubject || '-'}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">本文テンプレート:</div>
+                        <div class="info-value" style="white-space: pre-wrap;">${plan.emailBody || '-'}</div>
                     </div>
                 `;
+                
+                // GPTs用データ取得URLを表示
+                if (plan.planId) {
+                    const dataUrl = `${API_BASE_URL}/api/public/plan-data/${plan.planId}`;
+                    document.getElementById('planDataUrl').textContent = dataUrl;
+                } else {
+                    document.getElementById('planDataUrl').textContent = 'プランIDが未生成です';
+                }
                 
                 loadPlanCustomers(planId);
                 
@@ -1293,9 +1342,9 @@
                 document.getElementById('planModalTitle').textContent = 'プラン編集';
                 document.getElementById('planId').value = plan.id;
                 document.getElementById('planName').value = plan.name;
-                document.getElementById('planPrompt').value = plan.prompt;
-                document.getElementById('planModel').value = plan.model;
                 document.getElementById('planSendTime').value = plan.sendTime;
+                document.getElementById('planEmailSubject').value = plan.emailSubject || '';
+                document.getElementById('planEmailBody').value = plan.emailBody || '';
                 document.getElementById('planModal').classList.add('active');
             } catch (error) {
                 alert(error.message);
@@ -1320,11 +1369,11 @@
     
             const id = document.getElementById('planId').value;
             const name = document.getElementById('planName').value;
-            const prompt = document.getElementById('planPrompt').value;
-            const model = document.getElementById('planModel').value;
             const sendTime = document.getElementById('planSendTime').value;
+            const emailSubject = document.getElementById('planEmailSubject').value;
+            const emailBody = document.getElementById('planEmailBody').value;
 
-            if (!name || !prompt || !model || !sendTime) {
+            if (!name || !sendTime || !emailSubject || !emailBody) {
                 alert('全ての項目を入力してください');
                 return;
             }
@@ -1342,11 +1391,11 @@
             try {
                 if (id) {
                     await apiCall(`/api/plans/${id}`, 'PUT', {
-                        name, prompt, model, sendTime
+                        name, sendTime, emailSubject, emailBody
                     });
                 } else {
                     await apiCall('/api/plans', 'POST', {
-                        name, prompt, model, sendTime
+                        name, sendTime, emailSubject, emailBody
                     });
                 }
         
@@ -1495,56 +1544,9 @@
         // 設定読み込み
         async function loadSettings() {
             try {
-                const settings = await apiCall('/api/settings');
-                
-                document.getElementById('emailSubject').value = settings.emailSubject || '';
-                document.getElementById('emailBody').value = settings.emailBody || '';
-                document.getElementById('openaiApiKey').value = settings.openaiApiKey || '';
-                
                 await loadStaff();
             } catch (error) {
                 console.error('設定読み込みエラー:', error);
-            }
-        }
-        
-        // OpenAI API Key保存
-        async function handleOpenAIApiSave(event) {
-            event.preventDefault();
-            
-            const openaiApiKey = document.getElementById('openaiApiKey').value;
-            const messageDiv = document.getElementById('openaiApiMessage');
-            
-            messageDiv.classList.add('hidden');
-            messageDiv.textContent = '';
-            
-            try {
-                await apiCall('/api/settings', 'PUT', {
-                    openaiApiKey: openaiApiKey
-                });
-                
-                messageDiv.textContent = 'OpenAI API Keyを保存しました';
-                messageDiv.className = 'success-message';
-            } catch (error) {
-                messageDiv.textContent = error.message;
-                messageDiv.className = 'error-message';
-            }
-        }
-        
-        // メールテンプレート保存
-        async function handleEmailTemplateSave(event) {
-            event.preventDefault();
-            
-            const emailSubject = document.getElementById('emailSubject').value;
-            const emailBody = document.getElementById('emailBody').value;
-            
-            try {
-                await apiCall('/api/settings', 'PUT', {
-                    emailSubject, emailBody
-                });
-                
-                alert('メールテンプレートを保存しました');
-            } catch (error) {
-                alert(error.message);
             }
         }
         
@@ -1734,9 +1736,6 @@
             // パスワード変更
             document.getElementById('passwordChangeForm').addEventListener('submit', handlePasswordChange);
 
-            // OpenAI API設定
-            document.getElementById('openaiApiForm').addEventListener('submit', handleOpenAIApiSave);
-
             // フィルターボタン
             document.querySelectorAll('#statusFilters .filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -1796,9 +1795,6 @@
 
             // 手動メール送信
             document.getElementById('manualSendForm').addEventListener('submit', handleManualSend);
-
-            // メールテンプレート保存
-            document.getElementById('emailTemplateForm').addEventListener('submit', handleEmailTemplateSave);
         });
     </script>
 </body>
