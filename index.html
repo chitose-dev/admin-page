@@ -63,13 +63,6 @@
             min-height: 100px;
         }
 
-        .form-group small {
-            display: block;
-            margin-top: 5px;
-            font-size: 12px;
-            color: #666;
-        }
-
         .btn {
             padding: 10px 20px;
             background: #000;
@@ -100,15 +93,6 @@
 
         .btn-danger:hover {
             background: #c82333;
-        }
-
-        .btn-copy {
-            background: #007bff;
-            margin-left: 10px;
-        }
-
-        .btn-copy:hover {
-            background: #0056b3;
         }
 
         /* メインレイアウト */
@@ -243,6 +227,32 @@
 
         .card-header h2 {
             font-size: 20px;
+        }
+
+        /* 統計カード */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border: 2px solid #000;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
         }
 
         /* テーブル */
@@ -436,37 +446,6 @@
             margin-top: 15px;
         }
 
-        /* API URL表示エリア */
-        .api-url-box {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            padding: 15px;
-            margin-top: 15px;
-            border-radius: 4px;
-        }
-
-        .api-url-box p {
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .url-display {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .url-text {
-            flex: 1;
-            padding: 8px;
-            background: #fff;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 13px;
-            word-break: break-all;
-        }
-
         /* レスポンシブ */
         @media (max-width: 768px) {
             .hamburger {
@@ -488,6 +467,10 @@
 
             .main-container {
                 flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
 
             .plan-grid {
@@ -514,10 +497,6 @@
             .modal-content {
                 padding: 20px;
             }
-
-            .url-display {
-                flex-direction: column;
-            }
         }
 
         .hidden {
@@ -543,22 +522,60 @@
             flex: 1;
         }
 
-        .error-message {
-            color: #dc3545;
-            font-size: 14px;
-            margin-top: 10px;
+        .schedule-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .success-message {
-            color: #28a745;
-            font-size: 14px;
-            margin-top: 10px;
+        .schedule-item:last-child {
+            border-bottom: none;
         }
 
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
+        .schedule-time {
+            font-weight: 600;
+            font-size: 18px;
         }
+
+        .schedule-plan {
+            flex: 1;
+            margin: 0 15px;
+        }
+
+        .schedule-count {
+            background: #000;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .plan-subscriber-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .plan-subscriber-item:last-child {
+            border-bottom: none;
+        }
+
+        .plan-subscriber-name {
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .plan-subscriber-count {
+            font-size: 24px;
+            font-weight: bold;
+            margin-left: 15px;
+        }
+
+        @media (max-width: 1024px) {
     </style>
 </head>
 <body>
@@ -569,15 +586,41 @@
             <form id="loginForm">
                 <div class="form-group">
                     <label>ユーザーID</label>
-                    <input type="text" id="loginId" required>
+                    <input type="text" id="loginId" value="admin">
                 </div>
                 <div class="form-group">
                     <label>パスワード</label>
-                    <input type="password" id="loginPassword" required>
+                    <input type="password" id="loginPassword" value="password">
                 </div>
-                <div id="loginError" class="error-message hidden"></div>
-                <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">ログイン</button>
+                <button type="submit" class="btn" style="width: 100%;">ログイン</button>
             </form>
+        </div>
+    </div>
+
+    <!-- スタッフ追加/編集モーダル -->
+    <div id="staffModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="staffModalTitle">スタッフ追加</h2>
+                <button class="close-btn" id="closeStaffModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="staffForm">
+                    <input type="hidden" id="staffId">
+                    <div class="form-group">
+                        <label>氏名</label>
+                        <input type="text" id="staffName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>メールアドレス</label>
+                        <input type="email" id="staffEmail" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeStaffModalBtn2">キャンセル</button>
+                <button class="btn" id="saveStaffBtn">保存</button>
+            </div>
         </div>
     </div>
 
@@ -624,7 +667,6 @@
                             <thead>
                                 <tr>
                                     <th>会員番号</th>
-                                    <th>氏名</th>
                                     <th>ステータス</th>
                                     <th>プラン</th>
                                     <th>申請日</th>
@@ -664,7 +706,6 @@
                                     <th>プラン</th>
                                     <th>送信数</th>
                                     <th>ステータス</th>
-                                    <th>操作</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -687,11 +728,10 @@
                         <div class="form-group">
                             <label>件名</label>
                             <input type="text" id="manualSendSubject" required>
-                            <small>変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日, {today}=今日の日付(YYYY-MM-DD)</small>
                         </div>
                         <div class="form-group">
                             <label>本文</label>
-                            <textarea id="manualSendBody" required placeholder="変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日, {today}=今日の日付(YYYY-MM-DD)"></textarea>
+                            <textarea id="manualSendBody" required></textarea>
                         </div>
                         <button type="submit" class="btn">送信</button>
                     </form>
@@ -703,27 +743,30 @@
                 <div class="content-header">
                     <h1>設定</h1>
                 </div>
-                
                 <div class="card">
-                    <h2>パスワード変更</h2>
-                    <form id="passwordChangeForm">
+                    <h2>API設定</h2>
+                    <form id="apiSettingsForm">
                         <div class="form-group">
-                            <label>ユーザーID</label>
-                            <input type="text" id="changePasswordUserId" required>
+                            <label>OpenAI API Key（全プラン共通）</label>
+                            <input type="text" id="apiKey" placeholder="sk-...">
                         </div>
-                        <div class="form-group">
-                            <label>現在のパスワード</label>
-                            <input type="password" id="currentPassword" required>
-                        </div>
-                        <div class="form-group">
-                            <label>新しいパスワード</label>
-                            <input type="password" id="newPassword" required>
-                        </div>
-                        <div id="passwordChangeMessage" class="hidden"></div>
-                        <button type="submit" class="btn">変更</button>
+                        <button type="submit" class="btn">保存</button>
                     </form>
                 </div>
-                
+                <div class="card">
+                    <h2>メールテンプレート設定</h2>
+                    <form id="emailTemplateForm">
+                        <div class="form-group">
+                            <label>デフォルト件名</label>
+                            <input type="text" id="emailSubject" placeholder="【お知らせ】本日の配信">
+                        </div>
+                        <div class="form-group">
+                            <label>デフォルト本文テンプレート</label>
+                            <textarea id="emailBody" placeholder="{{name}}様&#10;&#10;本日の配信内容:&#10;{{content}}"></textarea>
+                        </div>
+                        <button type="submit" class="btn">保存</button>
+                    </form>
+                </div>
                 <div class="card">
                     <div class="card-header">
                         <h2>スタッフ管理</h2>
@@ -775,18 +818,20 @@
                         <input type="text" id="planName" required>
                     </div>
                     <div class="form-group">
+                        <label>プロンプトテンプレート</label>
+                        <textarea id="planPrompt" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>使用モデル</label>
+                        <select id="planModel" required>
+                            <option value="gpt-4o">GPT-4o</option>
+                            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>メール送信時刻</label>
                         <input type="time" id="planSendTime" required>
-                    </div>
-                    <div class="form-group">
-                        <label>メール件名テンプレート</label>
-                        <input type="text" id="planEmailSubject" required placeholder="例: 【{name-l}様】本日のお知らせ">
-                        <small>変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日, {today}=今日の日付(YYYY-MM-DD)</small>
-                    </div>
-                    <div class="form-group">
-                        <label>メール本文テンプレート</label>
-                        <textarea id="planEmailBody" required placeholder="例: {name-l}{name-f}様&#10;&#10;本日({today})の配信内容です。&#10;&#10;{{content}}"></textarea>
-                        <small>変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日, {today}=今日の日付(YYYY-MM-DD), {{content}}=GPTs生成内容</small>
                     </div>
                 </form>
             </div>
@@ -807,21 +852,7 @@
             <div class="modal-body">
                 <div id="planDetailInfo" style="margin-bottom: 20px;"></div>
                 
-                <!-- GPTs用データ取得URL -->
-                <div class="api-url-box">
-                    <p>📋 GPTs用データ取得URL</p>
-                    <div class="url-display">
-                        <div class="url-text" id="planDataUrl">-</div>
-                        <button class="btn btn-copy" onclick="copyPlanUrl()">コピー</button>
-                    </div>
-                    <small style="display: block; margin-top: 10px; color: #666;">
-                        このURLをGPTsのActionsに設定することで、プラン加入者の情報を取得できます。<br>
-                        JSON形式: /api/public/plan-data/{planId}<br>
-                        TXT形式: /api/public/plan-data/{planId}?format=txt
-                    </small>
-                </div>
-                
-                <h3 style="margin: 25px 0 15px; padding-bottom: 10px; border-bottom: 2px solid #000;">加入者一覧</h3>
+                <h3 style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #000;">加入者一覧</h3>
                 
                 <div class="form-group" style="max-width: 400px; margin-bottom: 20px;">
                     <label>検索（名前・会員番号）</label>
@@ -850,90 +881,123 @@
         </div>
     </div>
 
-    <!-- スタッフ追加/編集モーダル -->
-    <div id="staffModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="staffModalTitle">スタッフ追加</h2>
-                <button class="close-btn" id="closeStaffModalBtn">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="staffForm">
-                    <input type="hidden" id="staffId">
-                    <div class="form-group">
-                        <label>氏名</label>
-                        <input type="text" id="staffName" required>
-                    </div>
-                    <div class="form-group">
-                        <label>メールアドレス</label>
-                        <input type="email" id="staffEmail" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="closeStaffModalBtn2">キャンセル</button>
-                <button class="btn" id="saveStaffBtn">保存</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // ========================================
-        // 設定
-        // ========================================
-        const API_BASE_URL = 'https://gpts-email-system-460540063355.asia-northeast1.run.app';
-        
-        // 認証トークン
-        let authToken = localStorage.getItem('authToken') || null;
-        
         // グローバル変数
         let currentFilter = 'all';
-        let currentPlanId = null;
+        let currentPlanId = null; // 現在表示中のプランID
 
-        // ========================================
-        // ユーティリティ関数
-        // ========================================
-        
-        // API呼び出しヘルパー
-        async function apiCall(endpoint, method = 'GET', data = null, requireAuth = true) {
-            const headers = {
-                'Content-Type': 'application/json'
-            };
-            
-            if (requireAuth && authToken) {
-                headers['Authorization'] = `Bearer ${authToken}`;
+        // LocalStorageキー
+        const STORAGE_KEYS = {
+            APPLICATIONS: 'gpts_applications',
+            PLANS: 'gpts_plans',
+            HISTORY: 'gpts_history',
+            SETTINGS: 'gpts_settings',
+            STAFF: 'gpts_staff'
+        };
+
+        // ダミーデータの初期化
+        function initializeDummyData() {
+            if (!localStorage.getItem(STORAGE_KEYS.APPLICATIONS)) {
+                const applications = [
+                    {
+                        id: 1,
+                        memberNumber: 'NOTE-2024-0001',
+                        fullName: '山田太郎',
+                        birthDate: '1990-05-15',
+                        email: 'yamada@example.com',
+                        plan: 'ベーシックプラン',
+                        status: 'pending',
+                        appliedDate: '2024-10-15'
+                    },
+                    {
+                        id: 2,
+                        memberNumber: 'NOTE-2024-0002',
+                        fullName: '佐藤花子',
+                        birthDate: '1985-08-22',
+                        email: 'sato@example.com',
+                        plan: 'プレミアムプラン',
+                        status: 'approved',
+                        appliedDate: '2024-10-10'
+                    },
+                    {
+                        id: 3,
+                        memberNumber: 'NOTE-2024-0003',
+                        fullName: '鈴木一郎',
+                        birthDate: '1992-03-10',
+                        email: 'suzuki@example.com',
+                        plan: 'ベーシックプラン',
+                        status: 'rejected',
+                        appliedDate: '2024-10-12'
+                    }
+                ];
+                localStorage.setItem(STORAGE_KEYS.APPLICATIONS, JSON.stringify(applications));
             }
-            
-            const options = {
-                method: method,
-                headers: headers
-            };
-            
-            if (data && (method === 'POST' || method === 'PUT')) {
-                options.body = JSON.stringify(data);
+
+            if (!localStorage.getItem(STORAGE_KEYS.PLANS)) {
+                const plans = [
+                    {
+                        id: 1,
+                        name: 'ベーシックプラン',
+                        prompt: 'あなたは親切なアシスタントです。ユーザーの生年月日に基づいて、今日の運勢をお伝えしてください。',
+                        model: 'gpt-3.5-turbo',
+                        sendTime: '09:00'
+                    },
+                    {
+                        id: 2,
+                        name: 'プレミアムプラン',
+                        prompt: 'あなたは占星術の専門家です。ユーザーの生年月日に基づいて、詳細な今日の運勢と具体的なアドバイスを提供してください。',
+                        model: 'gpt-4o',
+                        sendTime: '08:00'
+                    }
+                ];
+                localStorage.setItem(STORAGE_KEYS.PLANS, JSON.stringify(plans));
             }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-                
-                if (response.status === 401) {
-                    // 認証エラー - ログアウト
-                    logout();
-                    throw new Error('認証エラー。再度ログインしてください。');
-                }
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'エラーが発生しました');
-                }
-                
-                return await response.json();
-            } catch (error) {
-                console.error('API Error:', error);
-                throw error;
+
+            if (!localStorage.getItem(STORAGE_KEYS.HISTORY)) {
+                const history = [
+                    {
+                        id: 1,
+                        date: '2024-10-20 09:00',
+                        plan: 'ベーシックプラン',
+                        count: 15,
+                        status: '送信完了'
+                    },
+                    {
+                        id: 2,
+                        date: '2024-10-20 08:00',
+                        plan: 'プレミアムプラン',
+                        count: 8,
+                        status: '送信完了'
+                    },
+                    {
+                        id: 3,
+                        date: '2024-10-19 09:00',
+                        plan: 'ベーシックプラン',
+                        count: 14,
+                        status: '送信完了'
+                    }
+                ];
+                localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
+            }
+
+            if (!localStorage.getItem(STORAGE_KEYS.SETTINGS)) {
+                const settings = {
+                    apiKey: '',
+                    emailSubject: '【お知らせ】本日の配信',
+                    emailBody: '{{name}}様\n\n本日の配信内容:\n{{content}}'
+                };
+                localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+            }
+
+            if (!localStorage.getItem(STORAGE_KEYS.STAFF)) {
+                const staff = [
+                    { id: 1, name: '管理者 太郎', email: 'admin@example.com' },
+                    { id: 2, name: '運営 花子', email: 'staff@example.com' }
+                ];
+                localStorage.setItem(STORAGE_KEYS.STAFF, JSON.stringify(staff));
             }
         }
-        
+
         // ステータステキスト取得
         function getStatusText(status) {
             const statusMap = {
@@ -944,157 +1008,211 @@
             };
             return statusMap[status] || status;
         }
-        
-        // ログアウト処理
-        function logout() {
-            authToken = null;
-            localStorage.removeItem('authToken');
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('mainScreen').classList.remove('active');
-            document.getElementById('loginForm').reset();
+
+        // ダッシュボード読み込み
+        function loadDashboard() {
+            const applications = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICATIONS) || '[]');
+            const plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
+            const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
+
+            // 統計カード
+            document.getElementById('totalApplications').textContent = applications.length;
+            document.getElementById('pendingApplications').textContent = applications.filter(a => a.status === 'pending').length;
+            document.getElementById('approvedApplications').textContent = applications.filter(a => a.status === 'approved').length;
+            document.getElementById('totalPlans').textContent = plans.length;
+
+            // 昨日の送信件数
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            const yesterdayTotal = history
+                .filter(h => h.date.startsWith(yesterdayStr))
+                .reduce((sum, h) => sum + h.count, 0);
+            document.getElementById('yesterdaySent').textContent = yesterdayTotal;
+
+            // 今月の送信予定（承認済みユーザー数 × 今月の残り日数の合計）
+            const today = new Date();
+            const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+            const remainingDays = daysInMonth - today.getDate() + 1;
+            const approvedCount = applications.filter(a => a.status === 'approved').length;
+            const monthlyScheduled = approvedCount * remainingDays;
+            document.getElementById('monthlyScheduled').textContent = monthlyScheduled;
+
+            // プラン別加入者数
+            loadPlanSubscriberChart(applications, plans);
+
+            // ステータス別内訳
+            loadStatusBreakdown(applications);
+
+            // 今日の送信予定
+            loadTodaySchedule(applications, plans);
         }
 
-        // プランURLコピー
-        function copyPlanUrl() {
-            const urlText = document.getElementById('planDataUrl').textContent;
-            navigator.clipboard.writeText(urlText).then(() => {
-                alert('URLをコピーしました');
-            }).catch(err => {
-                console.error('コピー失敗:', err);
-                alert('コピーに失敗しました');
+        // プラン別加入者数チャート
+        function loadPlanSubscriberChart(applications, plans) {
+            const chartDiv = document.getElementById('planSubscriberChart');
+            chartDiv.innerHTML = '';
+
+            plans.forEach(plan => {
+                const count = applications.filter(a => a.plan === plan.name && a.status === 'approved').length;
+                const item = document.createElement('div');
+                item.className = 'plan-subscriber-item';
+                item.innerHTML = `
+                    <div class="plan-subscriber-name">${plan.name}</div>
+                    <div class="plan-subscriber-count">${count}人</div>
+                `;
+                chartDiv.appendChild(item);
+            });
+
+            if (plans.length === 0) {
+                chartDiv.innerHTML = '<p style="padding: 15px; text-align: center; color: #666;">プランがありません</p>';
+            }
+        }
+
+        // 最近の申請
+        function loadRecentApplications(applications) {
+            const tbody = document.querySelector('#recentApplicationsTable tbody');
+            tbody.innerHTML = '';
+
+            const recent = applications
+                .sort((a, b) => new Date(b.appliedDate) - new Date(a.appliedDate))
+                .slice(0, 5);
+
+            if (recent.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">申請がありません</td></tr>';
+                return;
+            }
+
+            recent.forEach(app => {
+                const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                tr.innerHTML = `
+                    <td>${app.memberNumber}</td>
+                    <td>${app.fullName}</td>
+                    <td><span class="badge badge-${app.status}">${getStatusText(app.status)}</span></td>
+                    <td>${app.appliedDate}</td>
+                `;
+                tr.onclick = function() { 
+                    switchPage('applications');
+                    setTimeout(() => showApplicationDetail(app.id), 100);
+                };
+                tbody.appendChild(tr);
             });
         }
 
-        // ========================================
-        // 認証
-        // ========================================
-        
-        // ログイン
-        async function handleLogin(event) {
-            event.preventDefault();
-            
-            const userId = document.getElementById('loginId').value;
-            const password = document.getElementById('loginPassword').value;
-            const errorDiv = document.getElementById('loginError');
-            
-            errorDiv.classList.add('hidden');
-            errorDiv.textContent = '';
-            
-            try {
-                const response = await apiCall('/api/auth/login', 'POST', {
-                    userId: userId,
-                    password: password
-                }, false);
-                
-                authToken = response.token;
-                localStorage.setItem('authToken', authToken);
-                
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('mainScreen').classList.add('active');
-                loadApplications();
-            } catch (error) {
-                errorDiv.textContent = error.message;
-                errorDiv.classList.remove('hidden');
-            }
-        }
-        
-        // パスワード変更
-        async function handlePasswordChange(event) {
-            event.preventDefault();
-            
-            const userId = document.getElementById('changePasswordUserId').value;
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const messageDiv = document.getElementById('passwordChangeMessage');
-            
-            messageDiv.classList.add('hidden');
-            messageDiv.textContent = '';
-            
-            try {
-                await apiCall('/api/auth/change-password', 'POST', {
-                    userId: userId,
-                    currentPassword: currentPassword,
-                    newPassword: newPassword
-                });
-                
-                messageDiv.textContent = 'パスワードを変更しました';
-                messageDiv.className = 'success-message';
-                document.getElementById('passwordChangeForm').reset();
-            } catch (error) {
-                messageDiv.textContent = error.message;
-                messageDiv.className = 'error-message';
-            }
+        // ステータス別内訳
+        function loadStatusBreakdown(applications) {
+            const breakdownDiv = document.getElementById('statusBreakdown');
+            breakdownDiv.innerHTML = '';
+
+            const total = applications.length;
+            const statuses = [
+                { key: 'pending', label: '承認待ち', color: '#ffc107' },
+                { key: 'approved', label: '承認済み', color: '#28a745' },
+                { key: 'rejected', label: '却下', color: '#dc3545' },
+                { key: 'cancelled', label: '解約済み', color: '#6c757d' }
+            ];
+
+            statuses.forEach(status => {
+                const count = applications.filter(a => a.status === status.key).length;
+                const percentage = total > 0 ? (count / total * 100).toFixed(1) : 0;
+
+                const barDiv = document.createElement('div');
+                barDiv.className = 'status-bar';
+                barDiv.innerHTML = `
+                    <div class="status-bar-label">${status.label}</div>
+                    <div class="status-bar-graph">
+                        <div class="status-bar-fill" style="width: ${percentage}%; background: ${status.color};"></div>
+                    </div>
+                    <div class="status-bar-count">${count}件</div>
+                `;
+                breakdownDiv.appendChild(barDiv);
+            });
         }
 
-        // ========================================
-        // 申請者管理
-        // ========================================
-        
+        // 今日の送信予定
+        function loadTodaySchedule(applications, plans) {
+            const scheduleDiv = document.getElementById('todaySchedule');
+            scheduleDiv.innerHTML = '';
+
+            const schedules = plans.map(plan => {
+                const count = applications.filter(a => a.plan === plan.name && a.status === 'approved').length;
+                return {
+                    time: plan.sendTime,
+                    planName: plan.name,
+                    count: count
+                };
+            }).sort((a, b) => a.time.localeCompare(b.time));
+
+            if (schedules.length === 0) {
+                scheduleDiv.innerHTML = '<p style="padding: 15px; text-align: center; color: #666;">送信予定がありません</p>';
+                return;
+            }
+
+            schedules.forEach(schedule => {
+                const item = document.createElement('div');
+                item.className = 'schedule-item';
+                item.innerHTML = `
+                    <div class="schedule-time">${schedule.time}</div>
+                    <div class="schedule-plan">${schedule.planName}</div>
+                    <div class="schedule-count">${schedule.count}件送信予定</div>
+                `;
+                scheduleDiv.appendChild(item);
+            });
+        }
+
         // 申請者一覧読み込み
-        async function loadApplications(filterStatus = 'all') {
+        function loadApplications(filterStatus = 'all') {
             currentFilter = filterStatus;
+            const applications = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICATIONS) || '[]');
             const tbody = document.querySelector('#applicationsTable tbody');
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">読み込み中...</td></tr>';
-            
-            try {
-                const queryParam = filterStatus !== 'all' ? `?status=${filterStatus}` : '';
-                const applications = await apiCall(`/api/applications${queryParam}`);
+            tbody.innerHTML = '';
+
+            const filtered = filterStatus === 'all' 
+                ? applications 
+                : applications.filter(a => a.status === filterStatus);
+
+            filtered.forEach(app => {
+                const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
                 
-                tbody.innerHTML = '';
-                
-                if (applications.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">申請者がいません</td></tr>';
-                    return;
+                let actionButtons = '';
+                if (app.status === 'pending') {
+                    actionButtons = `
+                        <button class="action-btn" onclick="updateApplicationStatus(${app.id}, 'approved')">承認</button>
+                        <button class="action-btn" onclick="updateApplicationStatus(${app.id}, 'rejected')">却下</button>
+                    `;
+                } else if (app.status === 'rejected') {
+                    actionButtons = `
+                        <button class="action-btn" onclick="updateApplicationStatus(${app.id}, 'approved')">承認</button>
+                    `;
+                } else if (app.status === 'approved') {
+                    actionButtons = `
+                        <button class="action-btn btn-danger" onclick="cancelSubscription(${app.id})">解約</button>
+                    `;
                 }
                 
-                applications.forEach(app => {
-                    const tr = document.createElement('tr');
-                    tr.style.cursor = 'pointer';
-                    
-                    let actionButtons = '';
-                    if (app.status === 'pending') {
-                        actionButtons = `
-                            <button class="action-btn" onclick="updateApplicationStatus('${app.id}', 'approved')">承認</button>
-                            <button class="action-btn" onclick="updateApplicationStatus('${app.id}', 'rejected')">却下</button>
-                        `;
-                    } else if (app.status === 'rejected') {
-                        actionButtons = `
-                            <button class="action-btn" onclick="updateApplicationStatus('${app.id}', 'approved')">承認</button>
-                        `;
-                    } else if (app.status === 'approved') {
-                        actionButtons = `
-                            <button class="action-btn btn-danger" onclick="cancelSubscription('${app.id}')">解約</button>
-                        `;
-                    }
-                    
-                    const fullName = `${app.lastName || ''} ${app.firstName || ''}`;
-                    
-                    tr.innerHTML = `
-                        <td>${app.memberNumber}</td>
-                        <td>${fullName}</td>
-                        <td><span class="badge badge-${app.status}">${getStatusText(app.status)}</span></td>
-                        <td>${app.plan}</td>
-                        <td>${app.appliedDate}</td>
-                        <td class="action-btns" onclick="event.stopPropagation()">
-                            ${actionButtons}
-                        </td>
-                    `;
-                    tr.onclick = function() { showApplicationDetail(app.id); };
-                    tbody.appendChild(tr);
-                });
-            } catch (error) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #dc3545;">${error.message}</td></tr>`;
-            }
+                tr.innerHTML = `
+                    <td>${app.memberNumber}</td>
+                    <td><span class="badge badge-${app.status}">${getStatusText(app.status)}</span></td>
+                    <td>${app.plan}</td>
+                    <td>${app.appliedDate}</td>
+                    <td class="action-btns" onclick="event.stopPropagation()">
+                        ${actionButtons}
+                    </td>
+                `;
+                tr.onclick = function() { showApplicationDetail(app.id); };
+                tbody.appendChild(tr);
+            });
         }
-        
+
         // 申請者詳細表示
-        async function showApplicationDetail(id) {
-            try {
-                const app = await apiCall(`/api/applications/${id}`);
-                
+        function showApplicationDetail(id) {
+            const applications = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICATIONS) || '[]');
+            const app = applications.find(a => a.id === id);
+            
+            if (app) {
                 const detailBody = document.getElementById('applicationDetailBody');
-                const fullName = `${app.lastName || ''} ${app.firstName || ''}`;
-                
                 detailBody.innerHTML = `
                     <div class="info-row">
                         <div class="info-label">会員番号:</div>
@@ -1102,15 +1220,7 @@
                     </div>
                     <div class="info-row">
                         <div class="info-label">氏名:</div>
-                        <div class="info-value">${fullName}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">姓:</div>
-                        <div class="info-value">${app.lastName || ''}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">名:</div>
-                        <div class="info-value">${app.firstName || ''}</div>
+                        <div class="info-value">${app.fullName}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">生年月日:</div>
@@ -1140,192 +1250,171 @@
                     ` : ''}
                 `;
                 document.getElementById('applicationDetailModal').classList.add('active');
-            } catch (error) {
-                alert(error.message);
             }
         }
-        
-        // 申請ステータス更新
-        async function updateApplicationStatus(id, newStatus) {
-            try {
-                await apiCall(`/api/applications/${id}/status`, 'PUT', {
-                    status: newStatus
-                });
-                
-                loadApplications(currentFilter);
-                alert(`申請を${getStatusText(newStatus)}しました`);
-            } catch (error) {
-                alert(error.message);
-            }
-        }
-        
+
         // 解約処理
-        async function cancelSubscription(id) {
+        function cancelSubscription(id) {
             const lastSendDate = prompt('最終送信日を入力してください（YYYY-MM-DD形式）:');
             
             if (!lastSendDate) {
-                return;
+                return; // キャンセル
             }
             
+            // 日付の妥当性チェック
             const datePattern = /^\d{4}-\d{2}-\d{2}$/;
             if (!datePattern.test(lastSendDate)) {
                 alert('日付の形式が正しくありません。YYYY-MM-DD形式で入力してください。');
                 return;
             }
             
-            try {
-                await apiCall(`/api/applications/${id}/status`, 'PUT', {
-                    status: 'cancelled',
-                    lastSendDate: lastSendDate
-                });
+            const applications = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICATIONS) || '[]');
+            const index = applications.findIndex(a => a.id === id);
+            
+            if (index !== -1) {
+                applications[index].status = 'cancelled';
+                applications[index].lastSendDate = lastSendDate;
+                localStorage.setItem(STORAGE_KEYS.APPLICATIONS, JSON.stringify(applications));
                 
+                // 現在のページやモーダルに応じて再読み込み
                 if (document.getElementById('planDetailModal').classList.contains('active')) {
-                    loadPlanCustomers(currentPlanId);
+                    const planName = document.getElementById('planDetailTitle').textContent.replace(' - 詳細', '');
+                    loadPlanCustomers(planName);
                 }
                 
                 loadApplications(currentFilter);
                 alert(`解約処理が完了しました。最終送信日: ${lastSendDate}`);
-            } catch (error) {
-                alert(error.message);
             }
         }
 
-        // ========================================
-        // プラン管理
-        // ========================================
-        let isSavingPlan = false;
-        
-        // プラン一覧読み込み
-        async function loadPlans() {
-            const planGrid = document.getElementById('planGrid');
-            planGrid.innerHTML = '<p style="padding: 20px;">読み込み中...</p>';
+        // 申請ステータス更新
+        function updateApplicationStatus(id, newStatus) {
+            const applications = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICATIONS) || '[]');
+            const index = applications.findIndex(a => a.id === id);
             
-            try {
-                const plans = await apiCall('/api/plans');
-                
-                planGrid.innerHTML = '';
-                
-                if (plans.length === 0) {
-                    planGrid.innerHTML = '<p style="padding: 20px;">プランがありません</p>';
-                    return;
-                }
-                
-                plans.forEach(plan => {
-                    const planCard = document.createElement('div');
-                    planCard.className = 'plan-card';
-                    planCard.style.cursor = 'pointer';
-                    
-                    const subjectPreview = plan.emailSubject ? plan.emailSubject.substring(0, 50) : '-';
-                    const bodyPreview = plan.emailBody ? plan.emailBody.substring(0, 80) : '-';
-                    
-                    planCard.innerHTML = `
-                        <h3>${plan.name}</h3>
-                        <div class="plan-details">
-                            <p><strong>プランID:</strong> ${plan.planId || '-'}</p>
-                            <p><strong>送信時刻:</strong> ${plan.sendTime}</p>
-                            <p><strong>件名:</strong></p>
-                            <p style="font-size: 13px; color: #666;">${subjectPreview}...</p>
-                            <p style="margin-top: 10px;"><strong>本文:</strong></p>
-                            <p style="font-size: 13px; color: #666;">${bodyPreview}...</p>
-                        </div>
-                        <div class="plan-actions">
-                            <button class="btn" onclick="event.stopPropagation(); showPlanDetail('${plan.id}')" style="background: #007bff;">詳細</button>
-                            <button class="btn btn-danger" onclick="event.stopPropagation(); deletePlan('${plan.id}')">削除</button>
-                        </div>
-                    `;
-                    planCard.onclick = function() { showPlanDetail(plan.id); };
-                    planGrid.appendChild(planCard);
-                });
-            } catch (error) {
-                planGrid.innerHTML = `<p style="padding: 20px; color: #dc3545;">${error.message}</p>`;
+            if (index !== -1) {
+                applications[index].status = newStatus;
+                localStorage.setItem(STORAGE_KEYS.APPLICATIONS, JSON.stringify(applications));
+                                
+                loadApplications(currentFilter);
+                alert(`申請を${getStatusText(newStatus)}しました`);
             }
         }
-        
-        // プラン詳細表示
-        async function showPlanDetail(planId) {
-            try {
-                const plan = await apiCall(`/api/plans/${planId}`);
-                
-                currentPlanId = planId;
-                
-                document.getElementById('planDetailTitle').textContent = `${plan.name} - 詳細`;
-                
-                const planDetailInfo = document.getElementById('planDetailInfo');
-                planDetailInfo.innerHTML = `
-                    <div class="info-row">
-                        <div class="info-label">プラン名:</div>
-                        <div class="info-value">${plan.name}</div>
+
+        // プラン一覧読み込み
+        function loadPlans() {
+            const plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
+            const planGrid = document.getElementById('planGrid');
+            planGrid.innerHTML = '';
+
+            plans.forEach(plan => {
+                const planCard = document.createElement('div');
+                planCard.className = 'plan-card';
+                planCard.style.cursor = 'pointer';
+                planCard.innerHTML = `
+                    <h3>${plan.name}</h3>
+                    <div class="plan-details">
+                        <p><strong>使用モデル:</strong> ${plan.model}</p>
+                        <p><strong>送信時刻:</strong> ${plan.sendTime}</p>
+                        <p><strong>プロンプト:</strong></p>
+                        <p style="font-size: 13px; color: #666;">${plan.prompt.substring(0, 100)}...</p>
                     </div>
-                    <div class="info-row">
-                        <div class="info-label">プランID:</div>
-                        <div class="info-value" style="font-family: monospace;">${plan.planId || '未生成'}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">送信時刻:</div>
-                        <div class="info-value">${plan.sendTime}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">件名テンプレート:</div>
-                        <div class="info-value">${plan.emailSubject || '-'}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">本文テンプレート:</div>
-                        <div class="info-value" style="white-space: pre-wrap;">${plan.emailBody || '-'}</div>
+                    <div class="plan-actions">
+                        <button class="btn" onclick="event.stopPropagation(); showPlanDetail(${plan.id})" style="background: #007bff;">詳細</button>
+                        <button class="btn btn-danger" onclick="event.stopPropagation(); deletePlan(${plan.id})">削除</button>
                     </div>
                 `;
-                
-                // GPTs用データ取得URLを表示
-                if (plan.planId) {
-                    const dataUrl = `${API_BASE_URL}/api/public/plan-data/${plan.planId}`;
-                    document.getElementById('planDataUrl').textContent = dataUrl;
-                } else {
-                    document.getElementById('planDataUrl').textContent = 'プランIDが未生成です';
-                }
-                
-                loadPlanCustomers(planId);
-                
-                document.getElementById('planDetailModal').classList.add('active');
-            } catch (error) {
-                alert(error.message);
-            }
+                planCard.onclick = function() { showPlanDetail(plan.id); };
+                planGrid.appendChild(planCard);
+            });
         }
-        
-        // プラン加入者一覧読み込み
-        async function loadPlanCustomers(planId, searchQuery = '') {
-            const tbody = document.querySelector('#planCustomersTable tbody');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">読み込み中...</td></tr>';
+
+        // プラン詳細表示
+        function showPlanDetail(planId) {
+            const plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
+            const plan = plans.find(p => p.id === planId);
             
-            try {
-                const queryParam = searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : '';
-                const subscribers = await apiCall(`/api/plans/${planId}/subscribers${queryParam}`);
-                
-                tbody.innerHTML = '';
-                
-                if (subscribers.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">該当する加入者がいません</td></tr>';
-                    return;
-                }
-                
-                subscribers.forEach(customer => {
-                    const tr = document.createElement('tr');
-                    const fullName = `${customer.lastName || ''} ${customer.firstName || ''}`;
-                    
-                    tr.innerHTML = `
-                        <td>${customer.memberNumber}</td>
-                        <td>${fullName}</td>
-                        <td>${customer.email}</td>
-                        <td>${customer.appliedDate}</td>
-                        <td>
-                            <button class="action-btn btn-danger" onclick="cancelSubscription('${customer.id}')">解約</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (error) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #dc3545;">${error.message}</td></tr>`;
+            if (!plan) return;
+            
+            currentPlanId = planId; // 現在のプランIDを保存
+            
+            document.getElementById('planDetailTitle').textContent = `${plan.name} - 詳細`;
+            
+            // プラン情報表示
+            const planDetailInfo = document.getElementById('planDetailInfo');
+            planDetailInfo.innerHTML = `
+                <div class="info-row">
+                    <div class="info-label">プラン名:</div>
+                    <div class="info-value">${plan.name}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">使用モデル:</div>
+                    <div class="info-value">${plan.model}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">送信時刻:</div>
+                    <div class="info-value">${plan.sendTime}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">プロンプト:</div>
+                    <div class="info-value" style="white-space: pre-wrap;">${plan.prompt}</div>
+                </div>
+            `;
+            
+            // 加入者一覧を読み込み
+            loadPlanCustomers(plan.name);
+            
+            document.getElementById('planDetailModal').classList.add('active');
+        }
+
+        // プラン詳細から編集モーダルを開く
+        function editPlanFromDetail() {
+            if (currentPlanId) {
+                document.getElementById('planDetailModal').classList.remove('active');
+                editPlan(currentPlanId);
             }
         }
-        
+
+        // プラン加入者一覧読み込み
+        function loadPlanCustomers(planName, searchQuery = '') {
+            const applications = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPLICATIONS) || '[]');
+            const tbody = document.querySelector('#planCustomersTable tbody');
+            tbody.innerHTML = '';
+            
+            // プランに加入している承認済みユーザーをフィルター
+            let customers = applications.filter(app => 
+                app.plan === planName && app.status === 'approved'
+            );
+            
+            // 検索フィルター
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                customers = customers.filter(customer => 
+                    customer.fullName.toLowerCase().includes(query) ||
+                    customer.memberNumber.toLowerCase().includes(query)
+                );
+            }
+            
+            if (customers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">該当する加入者がいません</td></tr>';
+                return;
+            }
+            
+            customers.forEach(customer => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${customer.memberNumber}</td>
+                    <td>${customer.fullName}</td>
+                    <td>${customer.email}</td>
+                    <td>${customer.appliedDate}</td>
+                    <td>
+                        <button class="action-btn btn-danger" onclick="cancelSubscription(${customer.id})">解約</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
         // プラン追加モーダル表示
         function showAddPlanModal() {
             document.getElementById('planModalTitle').textContent = 'プラン追加';
@@ -1333,255 +1422,136 @@
             document.getElementById('planId').value = '';
             document.getElementById('planModal').classList.add('active');
         }
-        
+
         // プラン編集
-        async function editPlan(id) {
-            try {
-                const plan = await apiCall(`/api/plans/${id}`);
-                
+        function editPlan(id) {
+            const plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
+            const plan = plans.find(p => p.id === id);
+            
+            if (plan) {
                 document.getElementById('planModalTitle').textContent = 'プラン編集';
                 document.getElementById('planId').value = plan.id;
                 document.getElementById('planName').value = plan.name;
+                document.getElementById('planPrompt').value = plan.prompt;
+                document.getElementById('planModel').value = plan.model;
                 document.getElementById('planSendTime').value = plan.sendTime;
-                document.getElementById('planEmailSubject').value = plan.emailSubject || '';
-                document.getElementById('planEmailBody').value = plan.emailBody || '';
                 document.getElementById('planModal').classList.add('active');
-            } catch (error) {
-                alert(error.message);
             }
         }
-        
-        // プラン詳細から編集
-        function editPlanFromDetail() {
-            if (currentPlanId) {
-                document.getElementById('planDetailModal').classList.remove('active');
-                editPlan(currentPlanId);
-            }
-        }
-        
+
         // プラン保存
-        async function savePlan() {
-            // 連打防止チェック
-            if (isSavingPlan) {
-                console.log('既に保存処理中です');
-                return;
-            }
-    
+        function savePlan() {
             const id = document.getElementById('planId').value;
             const name = document.getElementById('planName').value;
+            const prompt = document.getElementById('planPrompt').value;
+            const model = document.getElementById('planModel').value;
             const sendTime = document.getElementById('planSendTime').value;
-            const emailSubject = document.getElementById('planEmailSubject').value;
-            const emailBody = document.getElementById('planEmailBody').value;
 
-            if (!name || !sendTime || !emailSubject || !emailBody) {
+            if (!name || !prompt || !model || !sendTime) {
                 alert('全ての項目を入力してください');
                 return;
             }
 
-            // 保存中フラグをON
-            isSavingPlan = true;
-    
-            // ボタンを無効化
-            const saveBtn = document.getElementById('savePlanBtn');
-            const originalText = saveBtn.textContent;
-            saveBtn.textContent = '保存中...';
-            saveBtn.disabled = true;
-            saveBtn.classList.add('loading');
+            let plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
 
-            try {
-                if (id) {
-                    await apiCall(`/api/plans/${id}`, 'PUT', {
-                        name, sendTime, emailSubject, emailBody
-                    });
-                } else {
-                    await apiCall('/api/plans', 'POST', {
-                        name, sendTime, emailSubject, emailBody
-                    });
+            if (id) {
+                const index = plans.findIndex(p => p.id === parseInt(id));
+                if (index !== -1) {
+                    plans[index] = { ...plans[index], name, prompt, model, sendTime };
                 }
-        
-                document.getElementById('planModal').classList.remove('active');
-                loadPlans();
-                alert('プランを保存しました');
-            } catch (error) {
-                alert(error.message);
-            } finally {
-                // 保存中フラグをOFF
-                isSavingPlan = false;
-        
-                // ボタンを元に戻す
-                saveBtn.textContent = originalText;
-                saveBtn.disabled = false;
-                saveBtn.classList.remove('loading');
+            } else {
+                const newId = plans.length > 0 ? Math.max(...plans.map(p => p.id)) + 1 : 1;
+                plans.push({ id: newId, name, prompt, model, sendTime });
             }
+
+            localStorage.setItem(STORAGE_KEYS.PLANS, JSON.stringify(plans));
+            document.getElementById('planModal').classList.remove('active');
+            loadPlans();
+            alert('プランを保存しました');
         }
-        
+
         // プラン削除
-        async function deletePlan(id) {
-            if (!confirm('このプランを削除してもよろしいですか?')) {
-                return;
-            }
-            
-            try {
-                await apiCall(`/api/plans/${id}`, 'DELETE');
+        function deletePlan(id) {
+            if (confirm('このプランを削除してもよろしいですか?')) {
+                let plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
+                plans = plans.filter(p => p.id !== id);
+                localStorage.setItem(STORAGE_KEYS.PLANS, JSON.stringify(plans));
                 loadPlans();
                 alert('プランを削除しました');
-            } catch (error) {
-                alert(error.message);
             }
         }
 
-        // ========================================
-        // 送信履歴
-        // ========================================
-        
         // 送信履歴読み込み
-        async function loadHistory(filterDate = null) {
+        function loadHistory(filterDate = null) {
+            const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
             const tbody = document.querySelector('#historyTable tbody');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">読み込み中...</td></tr>';
-            
-            try {
-                const queryParam = filterDate ? `?date=${filterDate}` : '';
-                const history = await apiCall(`/api/history${queryParam}`);
-                
-                tbody.innerHTML = '';
-                
-                if (history.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">履歴がありません</td></tr>';
-                    return;
-                }
-                
-                history.forEach(item => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${item.date}</td>
-                        <td>${item.plan}</td>
-                        <td>${item.count}件</td>
-                        <td>${item.status}</td>
-                        <td>
-                            <button class="action-btn btn-danger" onclick="deleteHistory('${item.id}')">削除</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (error) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #dc3545;">${error.message}</td></tr>`;
-            }
-        }
-        
-        // 履歴削除
-        async function deleteHistory(id) {
-            if (!confirm('この履歴を削除してもよろしいですか?')) {
-                return;
-            }
-            
-            try {
-                await apiCall(`/api/history/${id}`, 'DELETE');
-                loadHistory();
-                alert('履歴を削除しました');
-            } catch (error) {
-                alert(error.message);
-            }
+            tbody.innerHTML = '';
+
+            const filtered = filterDate 
+                ? history.filter(item => item.date.startsWith(filterDate))
+                : history;
+
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.date}</td>
+                    <td>${item.plan}</td>
+                    <td>${item.count}件</td>
+                    <td>${item.status}</td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
-        // ========================================
-        // 手動メール送信
-        // ========================================
-        
         // 手動メール送信画面読み込み
-        async function loadManualSend() {
+        function loadManualSend() {
+            const plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
             const select = document.getElementById('manualSendPlan');
-            select.innerHTML = '<option value="">読み込み中...</option>';
-            
-            try {
-                const plans = await apiCall('/api/plans');
-                
-                select.innerHTML = '';
-                
-                if (plans.length === 0) {
-                    select.innerHTML = '<option value="">プランがありません</option>';
-                    return;
-                }
-                
-                plans.forEach(plan => {
-                    const option = document.createElement('option');
-                    option.value = plan.id;
-                    option.textContent = plan.name;
-                    select.appendChild(option);
-                });
-            } catch (error) {
-                select.innerHTML = `<option value="">エラー: ${error.message}</option>`;
-            }
-        }
-        
-        // 手動メール送信
-        async function handleManualSend(event) {
-            event.preventDefault();
-            
-            const planId = document.getElementById('manualSendPlan').value;
-            const subject = document.getElementById('manualSendSubject').value;
-            const body = document.getElementById('manualSendBody').value;
-            
-            if (!confirm('選択したプランの全加入者にメールを送信しますか?')) {
-                return;
-            }
-            
-            try {
-                const result = await apiCall('/api/send-manual', 'POST', {
-                    planId, subject, body
-                });
-                
-                alert(result.message);
-                document.getElementById('manualSendForm').reset();
-            } catch (error) {
-                alert(error.message);
-            }
+            select.innerHTML = '';
+
+            plans.forEach(plan => {
+                const option = document.createElement('option');
+                option.value = plan.id;
+                option.textContent = plan.name;
+                select.appendChild(option);
+            });
         }
 
-        // ========================================
-        // 設定
-        // ========================================
-        
         // 設定読み込み
-        async function loadSettings() {
-            try {
-                await loadStaff();
-            } catch (error) {
-                console.error('設定読み込みエラー:', error);
-            }
-        }
-        
-        // スタッフ一覧読み込み
-        async function loadStaff() {
-            const tbody = document.querySelector('#staffTable tbody');
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">読み込み中...</td></tr>';
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem(STORAGE_KEYS.SETTINGS) || '{}');
+            document.getElementById('apiKey').value = settings.apiKey || '';
+            document.getElementById('emailSubject').value = settings.emailSubject || '';
+            document.getElementById('emailBody').value = settings.emailBody || '';
             
-            try {
-                const staff = await apiCall('/api/staff');
-                
-                tbody.innerHTML = '';
-                
-                if (staff.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">スタッフが登録されていません</td></tr>';
-                    return;
-                }
-                
-                staff.forEach(s => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${s.name}</td>
-                        <td>${s.email}</td>
-                        <td class="action-btns">
-                            <button class="action-btn" onclick="editStaff('${s.id}')">編集</button>
-                            <button class="action-btn btn-danger" onclick="deleteStaff('${s.id}')">削除</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (error) {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #dc3545;">${error.message}</td></tr>`;
-            }
+            loadStaff();
         }
-        
+
+        // スタッフ一覧読み込み
+        function loadStaff() {
+            const staff = JSON.parse(localStorage.getItem(STORAGE_KEYS.STAFF) || '[]');
+            const tbody = document.querySelector('#staffTable tbody');
+            tbody.innerHTML = '';
+
+            if (staff.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">スタッフが登録されていません</td></tr>';
+                return;
+            }
+
+            staff.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${s.name}</td>
+                    <td>${s.email}</td>
+                    <td class="action-btns">
+                        <button class="action-btn" onclick="editStaff(${s.id})">編集</button>
+                        <button class="action-btn btn-danger" onclick="deleteStaff(${s.id})">削除</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
         // スタッフ追加モーダル表示
         function showAddStaffModal() {
             document.getElementById('staffModalTitle').textContent = 'スタッフ追加';
@@ -1589,27 +1559,23 @@
             document.getElementById('staffId').value = '';
             document.getElementById('staffModal').classList.add('active');
         }
-        
+
         // スタッフ編集
-        async function editStaff(id) {
-            try {
-                const staff = await apiCall('/api/staff');
-                const member = staff.find(s => s.id === id);
-                
-                if (member) {
-                    document.getElementById('staffModalTitle').textContent = 'スタッフ編集';
-                    document.getElementById('staffId').value = member.id;
-                    document.getElementById('staffName').value = member.name;
-                    document.getElementById('staffEmail').value = member.email;
-                    document.getElementById('staffModal').classList.add('active');
-                }
-            } catch (error) {
-                alert(error.message);
+        function editStaff(id) {
+            const staff = JSON.parse(localStorage.getItem(STORAGE_KEYS.STAFF) || '[]');
+            const member = staff.find(s => s.id === id);
+            
+            if (member) {
+                document.getElementById('staffModalTitle').textContent = 'スタッフ編集';
+                document.getElementById('staffId').value = member.id;
+                document.getElementById('staffName').value = member.name;
+                document.getElementById('staffEmail').value = member.email;
+                document.getElementById('staffModal').classList.add('active');
             }
         }
-        
+
         // スタッフ保存
-        async function saveStaff() {
+        function saveStaff() {
             const id = document.getElementById('staffId').value;
             const name = document.getElementById('staffName').value;
             const email = document.getElementById('staffEmail').value;
@@ -1619,40 +1585,36 @@
                 return;
             }
 
-            try {
-                if (id) {
-                    await apiCall(`/api/staff/${id}`, 'PUT', { name, email });
-                } else {
-                    await apiCall('/api/staff', 'POST', { name, email });
+            let staff = JSON.parse(localStorage.getItem(STORAGE_KEYS.STAFF) || '[]');
+
+            if (id) {
+                const index = staff.findIndex(s => s.id === parseInt(id));
+                if (index !== -1) {
+                    staff[index] = { ...staff[index], name, email };
                 }
-                
-                document.getElementById('staffModal').classList.remove('active');
-                loadStaff();
-                alert('スタッフ情報を保存しました');
-            } catch (error) {
-                alert(error.message);
+            } else {
+                const newId = staff.length > 0 ? Math.max(...staff.map(s => s.id)) + 1 : 1;
+                staff.push({ id: newId, name, email });
             }
+
+            localStorage.setItem(STORAGE_KEYS.STAFF, JSON.stringify(staff));
+            document.getElementById('staffModal').classList.remove('active');
+            loadStaff();
+            alert('スタッフ情報を保存しました');
         }
-        
+
         // スタッフ削除
-        async function deleteStaff(id) {
-            if (!confirm('このスタッフを削除してもよろしいですか?')) {
-                return;
-            }
-            
-            try {
-                await apiCall(`/api/staff/${id}`, 'DELETE');
+        function deleteStaff(id) {
+            if (confirm('このスタッフを削除してもよろしいですか?')) {
+                let staff = JSON.parse(localStorage.getItem(STORAGE_KEYS.STAFF) || '[]');
+                staff = staff.filter(s => s.id !== id);
+                localStorage.setItem(STORAGE_KEYS.STAFF, JSON.stringify(staff));
                 loadStaff();
                 alert('スタッフを削除しました');
-            } catch (error) {
-                alert(error.message);
             }
         }
 
-        // ========================================
         // ページ切り替え
-        // ========================================
-        
         function switchPage(pageName) {
             document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
             document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
@@ -1679,19 +1641,10 @@
             }
         }
 
-        // ========================================
-        // 初期化
-        // ========================================
-        
+        // 初期化とイベントリスナー設定
         document.addEventListener('DOMContentLoaded', function() {
-            // トークンチェック
-            if (authToken) {
-                // 既にログイン済み
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('mainScreen').classList.add('active');
-                loadApplications();
-            }
-            
+            initializeDummyData();
+
             // ハンバーガーメニュー
             const hamburgerBtn = document.getElementById('hamburgerBtn');
             const sidebar = document.getElementById('sidebar');
@@ -1700,41 +1653,54 @@
             hamburgerBtn.addEventListener('click', function() {
                 sidebar.classList.toggle('active');
                 mobileOverlay.classList.toggle('active');
-                hamburgerBtn.classList.toggle('hidden');
             });
 
             mobileOverlay.addEventListener('click', function() {
                 sidebar.classList.remove('active');
                 mobileOverlay.classList.remove('active');
-                hamburgerBtn.classList.remove('hidden');
             });
 
-            // サイドバーメニュー
+            // サイドバーメニュークリック時にモバイルではメニューを閉じる
             document.querySelectorAll('#sidebarMenu li').forEach(item => {
                 item.addEventListener('click', function() {
                     const page = this.getAttribute('data-page');
                     switchPage(page);
                     
+                    // モバイルでメニューを閉じる
                     if (window.innerWidth <= 768) {
                         sidebar.classList.remove('active');
                         mobileOverlay.classList.remove('active');
-                        hamburgerBtn.classList.remove('hidden');
                     }
                 });
             });
 
             // ログインフォーム
-            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const id = document.getElementById('loginId').value;
+                const password = document.getElementById('loginPassword').value;
 
-            // ログアウト
-            document.getElementById('logoutBtn').addEventListener('click', function() {
-                if (confirm('ログアウトしますか?')) {
-                    logout();
+                if (id === 'admin' && password === 'password') {
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('mainScreen').classList.add('active');
+                    loadApplications();
+                } else {
+                    alert('IDまたはパスワードが正しくありません');
                 }
             });
 
-            // パスワード変更
-            document.getElementById('passwordChangeForm').addEventListener('submit', handlePasswordChange);
+            // ログアウト
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('mainScreen').classList.remove('active');
+                document.getElementById('loginForm').reset();
+                
+                // サイドバーを閉じる
+                sidebar.classList.remove('active');
+                mobileOverlay.classList.remove('active');
+            });
+
+            // サイドバーメニュー（削除）
 
             // フィルターボタン
             document.querySelectorAll('#statusFilters .filter-btn').forEach(btn => {
@@ -1745,9 +1711,19 @@
                 });
             });
 
-            // プラン関連
+            // プラン追加ボタン
             document.getElementById('addPlanBtn').addEventListener('click', showAddPlanModal);
+
+            // プラン保存ボタン
             document.getElementById('savePlanBtn').addEventListener('click', savePlan);
+
+            // モーダル閉じるボタン
+            document.getElementById('closeAppDetailBtn').addEventListener('click', function() {
+                document.getElementById('applicationDetailModal').classList.remove('active');
+            });
+            document.getElementById('closeAppDetailBtn2').addEventListener('click', function() {
+                document.getElementById('applicationDetailModal').classList.remove('active');
+            });
             document.getElementById('closePlanModalBtn').addEventListener('click', function() {
                 document.getElementById('planModal').classList.remove('active');
             });
@@ -1755,15 +1731,7 @@
                 document.getElementById('planModal').classList.remove('active');
             });
 
-            // 申請者詳細モーダル
-            document.getElementById('closeAppDetailBtn').addEventListener('click', function() {
-                document.getElementById('applicationDetailModal').classList.remove('active');
-            });
-            document.getElementById('closeAppDetailBtn2').addEventListener('click', function() {
-                document.getElementById('applicationDetailModal').classList.remove('active');
-            });
-
-            // プラン詳細モーダル
+            // プラン詳細モーダル閉じるボタン
             document.getElementById('closePlanDetailBtn').addEventListener('click', function() {
                 document.getElementById('planDetailModal').classList.remove('active');
             });
@@ -1773,14 +1741,17 @@
 
             // プラン加入者検索
             document.getElementById('planCustomerSearch').addEventListener('input', function() {
-                if (currentPlanId) {
-                    loadPlanCustomers(currentPlanId, this.value);
-                }
+                const planName = document.getElementById('planDetailTitle').textContent.replace(' - 詳細', '');
+                loadPlanCustomers(planName, this.value);
             });
 
-            // スタッフ関連
+            // スタッフ追加ボタン
             document.getElementById('addStaffBtn').addEventListener('click', showAddStaffModal);
+
+            // スタッフ保存ボタン
             document.getElementById('saveStaffBtn').addEventListener('click', saveStaff);
+
+            // スタッフモーダル閉じるボタン
             document.getElementById('closeStaffModalBtn').addEventListener('click', function() {
                 document.getElementById('staffModal').classList.remove('active');
             });
@@ -1793,8 +1764,40 @@
                 loadHistory(this.value);
             });
 
-            // 手動メール送信
-            document.getElementById('manualSendForm').addEventListener('submit', handleManualSend);
+            // 手動メール送信フォーム
+            document.getElementById('manualSendForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const planId = document.getElementById('manualSendPlan').value;
+                const subject = document.getElementById('manualSendSubject').value;
+                const body = document.getElementById('manualSendBody').value;
+
+                const plans = JSON.parse(localStorage.getItem(STORAGE_KEYS.PLANS) || '[]');
+                const plan = plans.find(p => p.id === parseInt(planId));
+
+                if (confirm(`${plan.name}の全加入者にメールを送信しますか?`)) {
+                    alert('メール送信を開始しました');
+                    this.reset();
+                }
+            });
+
+            // API設定保存
+            document.getElementById('apiSettingsForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const settings = JSON.parse(localStorage.getItem(STORAGE_KEYS.SETTINGS) || '{}');
+                settings.apiKey = document.getElementById('apiKey').value;
+                localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+                alert('API設定を保存しました');
+            });
+
+            // メールテンプレート保存
+            document.getElementById('emailTemplateForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const settings = JSON.parse(localStorage.getItem(STORAGE_KEYS.SETTINGS) || '{}');
+                settings.emailSubject = document.getElementById('emailSubject').value;
+                settings.emailBody = document.getElementById('emailBody').value;
+                localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+                alert('メールテンプレートを保存しました');
+            });
         });
     </script>
 </body>
