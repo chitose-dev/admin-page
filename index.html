@@ -63,6 +63,11 @@
             min-height: 100px;
         }
 
+        .form-group small {
+            font-size: 12px;
+            color: #666;
+        }
+
         .btn {
             padding: 10px 20px;
             background: #000;
@@ -739,7 +744,7 @@
 
     <!-- プラン追加/編集モーダル -->
     <div id="planModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
                 <h2 id="planModalTitle">プラン追加</h2>
                 <button class="close-btn" id="closePlanModalBtn">&times;</button>
@@ -747,40 +752,117 @@
             <div class="modal-body">
                 <form id="planForm">
                     <input type="hidden" id="planId">
+                    
                     <div class="form-group">
                         <label>プラン名</label>
                         <input type="text" id="planName" required>
                     </div>
+                    
                     <div class="form-group">
-                        <label>プロンプトテンプレート</label>
-                        <textarea id="planPrompt" required placeholder="変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日"></textarea>
+                        <label>GPTs利用設定</label>
+                        <select id="useGPTs" onchange="toggleGPTsFields()">
+                            <option value="false">ChatGPT API（従来通り）</option>
+                            <option value="true">GPTs利用</option>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label>使用モデル</label>
-                        <select id="planModel" required>
-                            <optgroup label="GPT-5シリーズ（最新）">
-                            <option value="gpt-5">GPT-5</option>
-            <option value="gpt-5-chat-latest">GPT-5 Chat Latest</option>
-            <option value="gpt-5-mini">GPT-5 Mini</option>
-            <option value="gpt-5-nano">GPT-5 Nano</option>
-        </optgroup>
-        <optgroup label="o1シリーズ（推論モデル）">
-            <option value="o1-preview">o1-preview</option>
-            <option value="o1-mini">o1-mini</option>
-        </optgroup>
-        <optgroup label="GPT-4oシリーズ">
-            <option value="gpt-4o">GPT-4o</option>
-            <option value="gpt-4o-mini">GPT-4o-mini</option>
-            <option value="gpt-4-turbo">GPT-4 Turbo</option>
-        </optgroup>
-        <optgroup label="旧モデル">
-            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-        </optgroup>
-    </select>
-</div>
-                    <div class="form-group">
-                        <label>メール送信時刻</label>
-                        <input type="time" id="planSendTime" required>
+                    
+                    <!-- 従来通りのChatGPT API設定 -->
+                    <div id="traditionalFields">
+                        <div class="form-group">
+                            <label>プロンプトテンプレート</label>
+                            <textarea id="planPrompt" placeholder="変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>使用モデル</label>
+                            <select id="planModel">
+                                <optgroup label="GPT-5シリーズ（最新）">
+                                    <option value="gpt-5">GPT-5</option>
+                                    <option value="gpt-5-chat-latest">GPT-5 Chat Latest</option>
+                                    <option value="gpt-5-mini">GPT-5 Mini</option>
+                                    <option value="gpt-5-nano">GPT-5 Nano</option>
+                                </optgroup>
+                                <optgroup label="o1シリーズ（推論モデル）">
+                                    <option value="o1-preview">o1-preview</option>
+                                    <option value="o1-mini">o1-mini</option>
+                                </optgroup>
+                                <optgroup label="GPT-4oシリーズ">
+                                    <option value="gpt-4o">GPT-4o</option>
+                                    <option value="gpt-4o-mini">GPT-4o-mini</option>
+                                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                </optgroup>
+                                <optgroup label="旧モデル">
+                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>メール送信時刻</label>
+                            <input type="time" id="planSendTime">
+                        </div>
+                    </div>
+                    
+                    <!-- GPTs利用時の設定 -->
+                    <div id="gptsFields" class="hidden">
+                        <div class="form-group">
+                            <label>出力先スプレッドシートID</label>
+                            <input type="text" id="outputSpreadsheetId" placeholder="スプレッドシートのIDを入力">
+                            <small style="color: #666; display: block; margin-top: 5px;">
+                                ※ URLの「/d/」と「/edit」の間の文字列です<br>
+                                例: https://docs.google.com/spreadsheets/d/<strong>ABC123XYZ</strong>/edit
+                            </small>
+                        </div>
+                        
+                        <div style="border: 1px solid #ddd; padding: 15px; margin: 20px 0;">
+                            <h3 style="margin-bottom: 15px;">NOTE自動投稿設定</h3>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="noteAutoPost" onchange="toggleNoteFields()"> NOTE自動投稿を有効にする
+                                </label>
+                            </div>
+                            <div id="noteFields" class="hidden">
+                                <div class="form-group">
+                                    <label>投稿頻度</label>
+                                    <select id="notePostFrequency" onchange="toggleNoteCustomFields()">
+                                        <option value="daily">毎日</option>
+                                        <option value="custom">カスタム指定</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>投稿時刻</label>
+                                    <input type="time" id="notePostTime" value="09:00">
+                                </div>
+                                <div id="noteCustomFields" class="form-group hidden">
+                                    <label>カスタム日付用スプレッドシートID</label>
+                                    <input type="text" id="noteCustomSpreadsheetId" placeholder="A2以降にYYYY-MM-DD形式で日付を入力">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="border: 1px solid #ddd; padding: 15px; margin: 20px 0;">
+                            <h3 style="margin-bottom: 15px;">メール自動送信設定</h3>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="emailAutoSend" onchange="toggleEmailFields()"> メール自動送信を有効にする
+                                </label>
+                            </div>
+                            <div id="emailFields" class="hidden">
+                                <div class="form-group">
+                                    <label>送信頻度</label>
+                                    <select id="emailSendFrequency" onchange="toggleEmailCustomFields()">
+                                        <option value="daily">毎日</option>
+                                        <option value="custom">カスタム指定</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>送信時刻</label>
+                                    <input type="time" id="emailSendTime" value="09:00">
+                                </div>
+                                <div id="emailCustomFields" class="form-group hidden">
+                                    <label>カスタム日付用スプレッドシートID</label>
+                                    <input type="text" id="emailCustomSpreadsheetId" placeholder="A2以降にYYYY-MM-DD形式で日付を入力">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -874,8 +956,8 @@
         // ユーティリティ関数
         // ========================================
         
-        // API呼び出しヘルパー
-        async function apiCall(endpoint, method = 'GET', data = null, requireAuth = true) {
+        // API呼び出しヘルパー（リトライ機能付き）
+        async function apiCall(endpoint, method = 'GET', data = null, requireAuth = true, retries = 3) {
             const headers = {
                 'Content-Type': 'application/json'
             };
@@ -886,32 +968,67 @@
             
             const options = {
                 method: method,
-                headers: headers
+                headers: headers,
+                timeout: 30000  // 30秒タイムアウト
             };
             
             if (data && (method === 'POST' || method === 'PUT')) {
                 options.body = JSON.stringify(data);
             }
             
-            try {
-                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-                
-                if (response.status === 401) {
-                    // 認証エラー - ログアウト
-                    logout();
-                    throw new Error('認証エラー。再度ログインしてください。');
+            for (let attempt = 0; attempt < retries; attempt++) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+                    
+                    if (response.status === 401) {
+                        // 認証エラー - ログアウト
+                        logout();
+                        throw new Error('認証エラー。再度ログインしてください。');
+                    }
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'エラーが発生しました');
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    if (attempt < retries - 1) {
+                        console.log(`リトライ ${attempt + 1}/${retries}: ${endpoint}`);
+                        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                    } else {
+                        console.error('API Error:', error);
+                        throw error;
+                    }
                 }
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'エラーが発生しました');
-                }
-                
-                return await response.json();
-            } catch (error) {
-                console.error('API Error:', error);
-                throw error;
             }
+        }
+        
+        // GPTs設定の表示切替
+        function toggleGPTsFields() {
+            const useGPTs = document.getElementById('useGPTs').value === 'true';
+            document.getElementById('traditionalFields').classList.toggle('hidden', useGPTs);
+            document.getElementById('gptsFields').classList.toggle('hidden', !useGPTs);
+        }
+        
+        function toggleNoteFields() {
+            const enabled = document.getElementById('noteAutoPost').checked;
+            document.getElementById('noteFields').classList.toggle('hidden', !enabled);
+        }
+        
+        function toggleNoteCustomFields() {
+            const frequency = document.getElementById('notePostFrequency').value;
+            document.getElementById('noteCustomFields').classList.toggle('hidden', frequency !== 'custom');
+        }
+        
+        function toggleEmailFields() {
+            const enabled = document.getElementById('emailAutoSend').checked;
+            document.getElementById('emailFields').classList.toggle('hidden', !enabled);
+        }
+        
+        function toggleEmailCustomFields() {
+            const frequency = document.getElementById('emailSendFrequency').value;
+            document.getElementById('emailCustomFields').classList.toggle('hidden', frequency !== 'custom');
         }
         
         // ステータステキスト取得
@@ -1183,13 +1300,29 @@
                     const planCard = document.createElement('div');
                     planCard.className = 'plan-card';
                     planCard.style.cursor = 'pointer';
-                    planCard.innerHTML = `
-                        <h3>${plan.name}</h3>
-                        <div class="plan-details">
+                    
+                    let details = '';
+                    if (plan.useGPTs) {
+                        details = `
+                            <p><strong>タイプ:</strong> GPTs利用</p>
+                            <p><strong>出力先:</strong> ${plan.outputSpreadsheetId ? 'スプレッドシート連携' : '未設定'}</p>
+                            <p><strong>NOTE投稿:</strong> ${plan.noteAutoPost ? '有効' : '無効'}</p>
+                            <p><strong>メール送信:</strong> ${plan.emailAutoSend ? '有効' : '無効'}</p>
+                        `;
+                    } else {
+                        details = `
+                            <p><strong>タイプ:</strong> ChatGPT API</p>
                             <p><strong>使用モデル:</strong> ${plan.model}</p>
                             <p><strong>送信時刻:</strong> ${plan.sendTime}</p>
                             <p><strong>プロンプト:</strong></p>
-                            <p style="font-size: 13px; color: #666;">${plan.prompt.substring(0, 100)}...</p>
+                            <p style="font-size: 13px; color: #666;">${(plan.prompt || '').substring(0, 100)}...</p>
+                        `;
+                    }
+                    
+                    planCard.innerHTML = `
+                        <h3>${plan.name}</h3>
+                        <div class="plan-details">
+                            ${details}
                         </div>
                         <div class="plan-actions">
                             <button class="btn" onclick="event.stopPropagation(); showPlanDetail('${plan.id}')" style="background: #007bff;">詳細</button>
@@ -1214,24 +1347,51 @@
                 document.getElementById('planDetailTitle').textContent = `${plan.name} - 詳細`;
                 
                 const planDetailInfo = document.getElementById('planDetailInfo');
-                planDetailInfo.innerHTML = `
+                
+                let detailsHTML = `
                     <div class="info-row">
                         <div class="info-label">プラン名:</div>
                         <div class="info-value">${plan.name}</div>
                     </div>
                     <div class="info-row">
-                        <div class="info-label">使用モデル:</div>
-                        <div class="info-value">${plan.model}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">送信時刻:</div>
-                        <div class="info-value">${plan.sendTime}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">プロンプト:</div>
-                        <div class="info-value" style="white-space: pre-wrap;">${plan.prompt}</div>
+                        <div class="info-label">タイプ:</div>
+                        <div class="info-value">${plan.useGPTs ? 'GPTs利用' : 'ChatGPT API'}</div>
                     </div>
                 `;
+                
+                if (plan.useGPTs) {
+                    detailsHTML += `
+                        <div class="info-row">
+                            <div class="info-label">出力先スプレッドシートID:</div>
+                            <div class="info-value">${plan.outputSpreadsheetId || '未設定'}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">NOTE自動投稿:</div>
+                            <div class="info-value">${plan.noteAutoPost ? `有効（${plan.notePostFrequency === 'daily' ? '毎日 ' + plan.notePostTime : 'カスタム指定'}）` : '無効'}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">メール自動送信:</div>
+                            <div class="info-value">${plan.emailAutoSend ? `有効（${plan.emailSendFrequency === 'daily' ? '毎日 ' + plan.emailSendTime : 'カスタム指定'}）` : '無効'}</div>
+                        </div>
+                    `;
+                } else {
+                    detailsHTML += `
+                        <div class="info-row">
+                            <div class="info-label">使用モデル:</div>
+                            <div class="info-value">${plan.model}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">送信時刻:</div>
+                            <div class="info-value">${plan.sendTime}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">プロンプト:</div>
+                            <div class="info-value" style="white-space: pre-wrap;">${plan.prompt}</div>
+                        </div>
+                    `;
+                }
+                
+                planDetailInfo.innerHTML = detailsHTML;
                 
                 loadPlanCustomers(planId);
                 
@@ -1282,6 +1442,8 @@
             document.getElementById('planModalTitle').textContent = 'プラン追加';
             document.getElementById('planForm').reset();
             document.getElementById('planId').value = '';
+            document.getElementById('useGPTs').value = 'false';
+            toggleGPTsFields();
             document.getElementById('planModal').classList.add('active');
         }
         
@@ -1293,9 +1455,29 @@
                 document.getElementById('planModalTitle').textContent = 'プラン編集';
                 document.getElementById('planId').value = plan.id;
                 document.getElementById('planName').value = plan.name;
-                document.getElementById('planPrompt').value = plan.prompt;
-                document.getElementById('planModel').value = plan.model;
-                document.getElementById('planSendTime').value = plan.sendTime;
+                document.getElementById('useGPTs').value = plan.useGPTs ? 'true' : 'false';
+                
+                if (plan.useGPTs) {
+                    document.getElementById('outputSpreadsheetId').value = plan.outputSpreadsheetId || '';
+                    document.getElementById('noteAutoPost').checked = plan.noteAutoPost || false;
+                    document.getElementById('notePostFrequency').value = plan.notePostFrequency || 'daily';
+                    document.getElementById('notePostTime').value = plan.notePostTime || '09:00';
+                    document.getElementById('noteCustomSpreadsheetId').value = plan.noteCustomSpreadsheetId || '';
+                    document.getElementById('emailAutoSend').checked = plan.emailAutoSend || false;
+                    document.getElementById('emailSendFrequency').value = plan.emailSendFrequency || 'daily';
+                    document.getElementById('emailSendTime').value = plan.emailSendTime || '09:00';
+                    document.getElementById('emailCustomSpreadsheetId').value = plan.emailCustomSpreadsheetId || '';
+                    toggleNoteFields();
+                    toggleNoteCustomFields();
+                    toggleEmailFields();
+                    toggleEmailCustomFields();
+                } else {
+                    document.getElementById('planPrompt').value = plan.prompt || '';
+                    document.getElementById('planModel').value = plan.model || 'gpt-4o';
+                    document.getElementById('planSendTime').value = plan.sendTime || '';
+                }
+                
+                toggleGPTsFields();
                 document.getElementById('planModal').classList.add('active');
             } catch (error) {
                 alert(error.message);
@@ -1314,24 +1496,76 @@
         async function savePlan() {
             const id = document.getElementById('planId').value;
             const name = document.getElementById('planName').value;
-            const prompt = document.getElementById('planPrompt').value;
-            const model = document.getElementById('planModel').value;
-            const sendTime = document.getElementById('planSendTime').value;
+            const useGPTs = document.getElementById('useGPTs').value === 'true';
 
-            if (!name || !prompt || !model || !sendTime) {
-                alert('全ての項目を入力してください');
+            if (!name) {
+                alert('プラン名を入力してください');
                 return;
+            }
+
+            const data = {
+                name: name,
+                useGPTs: useGPTs
+            };
+
+            if (!useGPTs) {
+                // 従来通りのモード
+                const prompt = document.getElementById('planPrompt').value;
+                const model = document.getElementById('planModel').value;
+                const sendTime = document.getElementById('planSendTime').value;
+
+                if (!prompt || !model || !sendTime) {
+                    alert('全ての項目を入力してください');
+                    return;
+                }
+
+                data.prompt = prompt;
+                data.model = model;
+                data.sendTime = sendTime;
+            } else {
+                // GPTsモード
+                const outputSpreadsheetId = document.getElementById('outputSpreadsheetId').value;
+
+                if (!outputSpreadsheetId) {
+                    alert('出力先スプレッドシートIDを入力してください');
+                    return;
+                }
+
+                data.outputSpreadsheetId = outputSpreadsheetId;
+                data.noteAutoPost = document.getElementById('noteAutoPost').checked;
+                
+                if (data.noteAutoPost) {
+                    data.notePostFrequency = document.getElementById('notePostFrequency').value;
+                    data.notePostTime = document.getElementById('notePostTime').value;
+                    if (data.notePostFrequency === 'custom') {
+                        data.noteCustomSpreadsheetId = document.getElementById('noteCustomSpreadsheetId').value;
+                        if (!data.noteCustomSpreadsheetId) {
+                            alert('NOTE投稿用のカスタム日付スプレッドシートIDを入力してください');
+                            return;
+                        }
+                    }
+                }
+                
+                data.emailAutoSend = document.getElementById('emailAutoSend').checked;
+                
+                if (data.emailAutoSend) {
+                    data.emailSendFrequency = document.getElementById('emailSendFrequency').value;
+                    data.emailSendTime = document.getElementById('emailSendTime').value;
+                    if (data.emailSendFrequency === 'custom') {
+                        data.emailCustomSpreadsheetId = document.getElementById('emailCustomSpreadsheetId').value;
+                        if (!data.emailCustomSpreadsheetId) {
+                            alert('メール送信用のカスタム日付スプレッドシートIDを入力してください');
+                            return;
+                        }
+                    }
+                }
             }
 
             try {
                 if (id) {
-                    await apiCall(`/api/plans/${id}`, 'PUT', {
-                        name, prompt, model, sendTime
-                    });
+                    await apiCall(`/api/plans/${id}`, 'PUT', data);
                 } else {
-                    await apiCall('/api/plans', 'POST', {
-                        name, prompt, model, sendTime
-                    });
+                    await apiCall('/api/plans', 'POST', data);
                 }
                 
                 document.getElementById('planModal').classList.remove('active');
