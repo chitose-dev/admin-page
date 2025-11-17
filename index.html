@@ -1668,9 +1668,6 @@
                     
                     // NOTE投稿の場合はURLリンクを表示
                     let statusHtml = item.status;
-                    if (item.articleUrl) {
-                        statusHtml = `<a href="${item.articleUrl}" target="_blank" style="color: #007bff;">${item.status}</a>`;
-                    }
                     
                     tr.innerHTML = `
                         <td>${item.date}</td>
