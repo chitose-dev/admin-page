@@ -600,32 +600,39 @@
                 <div class="plan-grid" id="planGrid"></div>
             </div>
 
-            <!-- 送信履歴 -->
-            <div id="history" class="page-content hidden">
-                <div class="content-header">
-                    <h1>メール送信履歴</h1>
-                </div>
-                <div class="card">
-                    <div class="form-group" style="max-width: 300px; margin-bottom: 20px;">
-                        <label>日付絞り込み</label>
-                        <input type="date" id="historyDateFilter">
-                    </div>
-                    <div class="table-container">
-                        <table id="historyTable">
-                            <thead>
-                                <tr>
-                                    <th>送信日時</th>
-                                    <th>プラン</th>
-                                    <th>送信数</th>
-                                    <th>ステータス</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <!-- 送信履歴ページ -->
+<div id="history" class="page-content hidden">
+    <div class="content-header">
+        <h1>送信履歴</h1>
+    </div>
+    <div class="card">
+        <div class="filters" style="margin-bottom: 20px;">
+            <button class="filter-btn active" data-history-type="all">全て</button>
+            <button class="filter-btn" data-history-type="scheduled">定時メール</button>
+            <button class="filter-btn" data-history-type="manual">手動メール</button>
+            <button class="filter-btn" data-history-type="note-post">NOTE投稿</button>
+        </div>
+        <div class="form-group" style="max-width: 300px; margin-bottom: 20px;">
+            <label>日付絞り込み</label>
+            <input type="date" id="historyDateFilter">
+        </div>
+        <div class="table-container">
+            <table id="historyTable">
+                <thead>
+                    <tr>
+                        <th>送信日時</th>
+                        <th>プラン</th>
+                        <th>タイプ</th>
+                        <th>送信数</th>
+                        <th>ステータス</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
             <!-- 手動メール送信 -->
             <div id="manual-send" class="page-content hidden">
@@ -689,6 +696,24 @@
                         <button type="submit" class="btn">保存</button>
                     </form>
                 </div>
+
+                <div class="card">
+    <h2>NOTE認証設定</h2>
+    <form id="noteAuthForm">
+        <div class="form-group">
+            <label>NOTEメールアドレス</label>
+            <input type="email" id="noteEmail" placeholder="your_email@example.com">
+            <small>NOTE自動投稿に使用するアカウントのメールアドレスです</small>
+        </div>
+        <div class="form-group">
+            <label>NOTEパスワード</label>
+            <input type="password" id="notePassword" placeholder="パスワードを入力">
+            <small>セキュアに保存されます</small>
+        </div>
+        <div id="noteAuthMessage" class="hidden"></div>
+        <button type="submit" class="btn">保存</button>
+    </form>
+</div>
 
                 <div class="card">
                     <h2>メールテンプレート設定</h2>
@@ -859,7 +884,7 @@
                                 </div>
                                 <div id="emailCustomFields" class="form-group hidden">
                                     <label>カスタム日付用スプレッドシートID</label>
-                                    <input type="text" id="emailCustomSpreadsheetId" placeholder="A2以降にYYYY-MM-DD形式で日付を入力">
+                                    <input type="text" id="emailCustomSpreadsheetId" placeholder="A1以降にYYYY-MM-DD形式で日付を入力">
                                 </div>
                             </div>
                         </div>
@@ -951,6 +976,7 @@
         // グローバル変数
         let currentFilter = 'all';
         let currentPlanId = null;
+        let currentHistoryTypeFilter = 'all';
 
         // ========================================
         // ユーティリティ関数
@@ -1596,9 +1622,10 @@
         // ========================================
         
         // 送信履歴読み込み
-        async function loadHistory(filterDate = null) {
+        async function loadHistory(filterDate = null, typeFilter = 'all') {
+            currentHistoryTypeFilter = typeFilter;
             const tbody = document.querySelector('#historyTable tbody');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">読み込み中...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">読み込み中...</td></tr>';
             
             try {
                 const queryParam = filterDate ? `?date=${filterDate}` : '';
@@ -1606,18 +1633,51 @@
                 
                 tbody.innerHTML = '';
                 
-                if (history.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">履歴がありません</td></tr>';
+                // タイプでフィルター
+                let filteredHistory = history;
+                if (typeFilter !== 'all') {
+                    filteredHistory = history.filter(item => {
+                        if (typeFilter === 'scheduled') {
+                            return item.type === 'scheduled' || item.type === 'scheduled-gpts';
+                        } else if (typeFilter === 'note-post') {
+                            return item.type === 'note-post' || item.type === 'note-post-error';
+                        }
+                        return item.type === typeFilter;
+                    });
+                }
+                
+                if (filteredHistory.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">履歴がありません</td></tr>';
                     return;
                 }
                 
-                history.forEach(item => {
+                filteredHistory.forEach(item => {
                     const tr = document.createElement('tr');
+                    
+                    // タイプ表示
+                    let typeText = '不明';
+                    if (item.type === 'scheduled' || item.type === 'scheduled-gpts') {
+                        typeText = '定時メール';
+                    } else if (item.type === 'manual') {
+                        typeText = '手動メール';
+                    } else if (item.type === 'note-post') {
+                        typeText = 'NOTE投稿';
+                    } else if (item.type === 'note-post-error') {
+                        typeText = 'NOTE投稿エラー';
+                    }
+                    
+                    // NOTE投稿の場合はURLリンクを表示
+                    let statusHtml = item.status;
+                    if (item.articleUrl) {
+                        statusHtml = `<a href="${item.articleUrl}" target="_blank" style="color: #007bff;">${item.status}</a>`;
+                    }
+                    
                     tr.innerHTML = `
                         <td>${item.date}</td>
                         <td>${item.plan}</td>
+                        <td>${typeText}</td>
                         <td>${item.count}件</td>
-                        <td>${item.status}</td>
+                        <td>${statusHtml}</td>
                         <td>
                             <button class="action-btn btn-danger" onclick="deleteHistory('${item.id}')">削除</button>
                         </td>
@@ -1625,7 +1685,7 @@
                     tbody.appendChild(tr);
                 });
             } catch (error) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #dc3545;">${error.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #dc3545;">${error.message}</td></tr>`;
             }
         }
         
@@ -1637,7 +1697,8 @@
             
             try {
                 await apiCall(`/api/history/${id}`, 'DELETE');
-                loadHistory();
+                const dateFilter = document.getElementById('historyDateFilter').value;
+                loadHistory(dateFilter, currentHistoryTypeFilter);
                 alert('履歴を削除しました');
             } catch (error) {
                 alert(error.message);
@@ -1710,6 +1771,8 @@
                 document.getElementById('emailSubject').value = settings.emailSubject || '';
                 document.getElementById('emailBody').value = settings.emailBody || '';
                 document.getElementById('openaiApiKey').value = settings.openaiApiKey || '';
+                document.getElementById('noteEmail').value = settings.noteEmail || '';
+                document.getElementById('notePassword').value = settings.notePassword || '';
                 
                 await loadStaff();
             } catch (error) {
@@ -1733,6 +1796,31 @@
                 });
                 
                 messageDiv.textContent = 'OpenAI API Keyを保存しました';
+                messageDiv.className = 'success-message';
+            } catch (error) {
+                messageDiv.textContent = error.message;
+                messageDiv.className = 'error-message';
+            }
+        }
+        
+        // NOTE認証設定保存
+        async function handleNoteAuthSave(event) {
+            event.preventDefault();
+            
+            const noteEmail = document.getElementById('noteEmail').value;
+            const notePassword = document.getElementById('notePassword').value;
+            const messageDiv = document.getElementById('noteAuthMessage');
+            
+            messageDiv.classList.add('hidden');
+            messageDiv.textContent = '';
+            
+            try {
+                await apiCall('/api/settings', 'PUT', {
+                    noteEmail: noteEmail,
+                    notePassword: notePassword
+                });
+                
+                messageDiv.textContent = 'NOTE認証情報を保存しました';
                 messageDiv.className = 'success-message';
             } catch (error) {
                 messageDiv.textContent = error.message;
@@ -1947,12 +2035,26 @@
             // OpenAI API設定
             document.getElementById('openaiApiForm').addEventListener('submit', handleOpenAIApiSave);
 
+            // NOTE認証設定
+            document.getElementById('noteAuthForm').addEventListener('submit', handleNoteAuthSave);
+
             // フィルターボタン
             document.querySelectorAll('#statusFilters .filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('#statusFilters .filter-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     loadApplications(this.getAttribute('data-status'));
+                });
+            });
+
+            // 履歴タイプフィルター
+            document.querySelectorAll('[data-history-type]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('[data-history-type]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    const typeFilter = this.getAttribute('data-history-type');
+                    const dateFilter = document.getElementById('historyDateFilter').value;
+                    loadHistory(dateFilter, typeFilter);
                 });
             });
 
@@ -2001,7 +2103,7 @@
 
             // 日付フィルター
             document.getElementById('historyDateFilter').addEventListener('change', function() {
-                loadHistory(this.value);
+                loadHistory(this.value, currentHistoryTypeFilter);
             });
 
             // 手動メール送信
