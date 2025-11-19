@@ -477,17 +477,34 @@
         .hidden {
             display: none;
         }
+        /* チェックボックス付きラベルのスタイル */
+        .form-group label input[type="checkbox"] {
+            margin-right: 8px;
+            vertical-align: middle;
+            width: auto;
+            padding: 0;
+        }
 
+        .form-group label {
+            display: flex;
+            align-items: center;
+        }
+
+        /* チェックボックスを含むラベルの場合は、flexレイアウトを使わない */
+        .form-group > label:has(input[type="checkbox"]) {
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+        }
         .info-row {
             display: flex;
             padding: 10px 0;
-            border-bottom: 1px solid #eee;
+             border-bottom: 1px solid #eee;
         }
 
         .info-row:last-child {
             border-bottom: none;
         }
-
         .info-label {
             font-weight: 600;
             width: 150px;
