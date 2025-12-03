@@ -1000,52 +1000,83 @@
         // ========================================
         
         // API呼び出しヘルパー（リトライ機能付き）
-        async function apiCall(endpoint, method = 'GET', data = null, requireAuth = true, retries = 3) {
-            const headers = {
-                'Content-Type': 'application/json'
-            };
+        async function apiCall(endpoint, method = 'GET', data = null, requireAuth = true, retries = MAX_API_RETRIES) {
+    const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    };
+    
+    if (requireAuth && authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    
+    const options = {
+        method: method,
+        headers: headers,
+        mode: 'cors',
+        credentials: 'omit'
+    };
+    
+    if (data && (method === 'POST' || method === 'PUT')) {
+        options.body = JSON.stringify(data);
+    }
+    
+    let lastError = null;
+    
+    for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+            console.log(`API Call [${attempt + 1}/${retries}]: ${method} ${endpoint}`);
             
-            if (requireAuth && authToken) {
-                headers['Authorization'] = `Bearer ${authToken}`;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒タイムアウト
+            
+            options.signal = controller.signal;
+            
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+            
+            clearTimeout(timeoutId);
+            
+            if (response.status === 401) {
+                // 認証エラー - ログアウト
+                logout();
+                throw new Error('認証エラー。再度ログインしてください。');
             }
             
-            const options = {
-                method: method,
-                headers: headers,
-                timeout: 30000  // 30秒タイムアウト
-            };
-            
-            if (data && (method === 'POST' || method === 'PUT')) {
-                options.body = JSON.stringify(data);
-            }
-            
-            for (let attempt = 0; attempt < retries; attempt++) {
+            if (!response.ok) {
+                let errorData;
                 try {
-                    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-                    
-                    if (response.status === 401) {
-                        // 認証エラー - ログアウト
-                        logout();
-                        throw new Error('認証エラー。再度ログインしてください。');
-                    }
-                    
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || 'エラーが発生しました');
-                    }
-                    
-                    return await response.json();
-                } catch (error) {
-                    if (attempt < retries - 1) {
-                        console.log(`リトライ ${attempt + 1}/${retries}: ${endpoint}`);
-                        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
-                    } else {
-                        console.error('API Error:', error);
-                        throw error;
-                    }
+                    errorData = await response.json();
+                } catch {
+                    errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
                 }
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            
+            const result = await response.json();
+            console.log(`✅ API Success: ${endpoint}`);
+            return result;
+            
+        } catch (error) {
+            lastError = error;
+            console.error(`❌ API Error [${attempt + 1}/${retries}]: ${endpoint}`, error);
+            
+            if (error.name === 'AbortError') {
+                lastError = new Error('リクエストがタイムアウトしました');
+            }
+            
+            if (attempt < retries - 1) {
+                const delay = API_RETRY_DELAY * (attempt + 1);
+                console.log(`リトライ ${attempt + 1}/${retries}: ${endpoint} (${delay}ms後)`);
+                await new Promise(resolve => setTimeout(resolve, delay));
             }
         }
+    }
+    
+    // 全リトライ失敗
+    console.error('API Error:', lastError);
+    throw lastError || new Error('接続エラーが発生しました');
+}
+
         
         // GPTs設定の表示切替
         function toggleGPTsFields() {
