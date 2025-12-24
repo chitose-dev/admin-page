@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPTsメール送信システム - 管理画面</title>
+    <title>GPTsメール送信システム v5.0 - 管理画面</title>
     <style>
         * {
             margin: 0;
@@ -66,6 +66,8 @@
         .form-group small {
             font-size: 12px;
             color: #666;
+            display: block;
+            margin-top: 5px;
         }
 
         .btn {
@@ -477,7 +479,7 @@
         .hidden {
             display: none;
         }
-        /* チェックボックス付きラベルのスタイル */
+
         .form-group label input[type="checkbox"] {
             margin-right: 8px;
             vertical-align: middle;
@@ -485,26 +487,16 @@
             padding: 0;
         }
 
-        .form-group label {
-            display: flex;
-            align-items: center;
-        }
-
-        /* チェックボックスを含むラベルの場合は、flexレイアウトを使わない */
-        .form-group > label:has(input[type="checkbox"]) {
-            display: inline-flex;
-            align-items: center;
-            cursor: pointer;
-        }
         .info-row {
             display: flex;
             padding: 10px 0;
-             border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #eee;
         }
 
         .info-row:last-child {
             border-bottom: none;
         }
+
         .info-label {
             font-weight: 600;
             width: 150px;
@@ -563,7 +555,7 @@
         <!-- サイドバー -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h2>管理画面</h2>
+                <h2>管理画面 v5.0</h2>
             </div>
             <ul class="sidebar-menu" id="sidebarMenu">
                 <li data-page="applications" class="active">申請者管理</li>
@@ -617,39 +609,39 @@
                 <div class="plan-grid" id="planGrid"></div>
             </div>
 
-            <!-- 送信履歴ページ -->
-<div id="history" class="page-content hidden">
-    <div class="content-header">
-        <h1>送信履歴</h1>
-    </div>
-    <div class="card">
-        <div class="filters" style="margin-bottom: 20px;">
-            <button class="filter-btn active" data-history-type="all">全て</button>
-            <button class="filter-btn" data-history-type="scheduled">定時メール</button>
-            <button class="filter-btn" data-history-type="manual">手動メール</button>
-            <button class="filter-btn" data-history-type="note-post">NOTE投稿</button>
-        </div>
-        <div class="form-group" style="max-width: 300px; margin-bottom: 20px;">
-            <label>日付絞り込み</label>
-            <input type="date" id="historyDateFilter">
-        </div>
-        <div class="table-container">
-            <table id="historyTable">
-                <thead>
-                    <tr>
-                        <th>送信日時</th>
-                        <th>プラン</th>
-                        <th>タイプ</th>
-                        <th>送信数</th>
-                        <th>ステータス</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-</div>
+            <!-- 送信履歴 -->
+            <div id="history" class="page-content hidden">
+                <div class="content-header">
+                    <h1>送信履歴</h1>
+                </div>
+                <div class="card">
+                    <div class="filters" style="margin-bottom: 20px;">
+                        <button class="filter-btn active" data-history-type="all">全て</button>
+                        <button class="filter-btn" data-history-type="scheduled-email">定時メール</button>
+                        <button class="filter-btn" data-history-type="manual">手動メール</button>
+                        <button class="filter-btn" data-history-type="scheduled-note">NOTE投稿</button>
+                    </div>
+                    <div class="form-group" style="max-width: 300px; margin-bottom: 20px;">
+                        <label>日付絞り込み</label>
+                        <input type="date" id="historyDateFilter">
+                    </div>
+                    <div class="table-container">
+                        <table id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>送信日時</th>
+                                    <th>プラン</th>
+                                    <th>タイプ</th>
+                                    <th>送信数</th>
+                                    <th>ステータス</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
             <!-- 手動メール送信 -->
             <div id="manual-send" class="page-content hidden">
@@ -707,7 +699,7 @@
                         <div class="form-group">
                             <label>OpenAI API Key</label>
                             <input type="text" id="openaiApiKey" placeholder="sk-...">
-                            <small>GPTでメール本文を自動生成するために必要です。設定画面から安全に変更できます。</small>
+                            <small>メール本文・NOTE記事の自動生成に必要です</small>
                         </div>
                         <div id="openaiApiMessage" class="hidden"></div>
                         <button type="submit" class="btn">保存</button>
@@ -715,35 +707,17 @@
                 </div>
 
                 <div class="card">
-    <h2>NOTE認証設定</h2>
-    <form id="noteAuthForm">
-        <div class="form-group">
-            <label>NOTEメールアドレス</label>
-            <input type="email" id="noteEmail" placeholder="your_email@example.com">
-            <small>NOTE自動投稿に使用するアカウントのメールアドレスです</small>
-        </div>
-        <div class="form-group">
-            <label>NOTEパスワード</label>
-            <input type="password" id="notePassword" placeholder="パスワードを入力">
-            <small>セキュアに保存されます</small>
-        </div>
-        <div id="noteAuthMessage" class="hidden"></div>
-        <button type="submit" class="btn">保存</button>
-    </form>
-</div>
-
-                <div class="card">
-                    <h2>メールテンプレート設定</h2>
-                    <form id="emailTemplateForm">
+                    <h2>NOTE認証設定</h2>
+                    <form id="noteAuthForm">
                         <div class="form-group">
-                            <label>デフォルト件名</label>
-                            <input type="text" id="emailSubject" placeholder="【お知らせ】本日の配信">
+                            <label>NOTEメールアドレス</label>
+                            <input type="email" id="noteEmail" placeholder="your_email@example.com">
                         </div>
                         <div class="form-group">
-                            <label>デフォルト本文テンプレート</label>
-                            <textarea id="emailBody" placeholder="{name-l}{name-f}様&#10;&#10;本日の配信内容:&#10;{{content}}"></textarea>
-                            <small>変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日, {{content}}=GPT生成内容</small>
+                            <label>NOTEパスワード</label>
+                            <input type="password" id="notePassword" placeholder="パスワードを入力">
                         </div>
+                        <div id="noteAuthMessage" class="hidden"></div>
                         <button type="submit" class="btn">保存</button>
                     </form>
                 </div>
@@ -801,108 +775,99 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>GPTs利用設定</label>
-                        <select id="useGPTs" onchange="toggleGPTsFields()">
-                            <option value="false">ChatGPT API（従来通り）</option>
-                            <option value="true">GPTs利用</option>
+                        <label>プロンプトテンプレート</label>
+                        <textarea id="planPrompt" rows="6" placeholder="変数: {birthday}=生年月日, {external_data}=外部データ, {name-l}=姓, {name-f}=名"></textarea>
+                        <small>メール本文とNOTE記事の両方で使用されます</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>使用モデル</label>
+                        <select id="planModel">
+                            <optgroup label="GPT-5シリーズ（最新）">
+                                <option value="gpt-5.1">GPT-5.1</option>
+                                <option value="gpt-5">GPT-5</option>
+                            </optgroup>
+                            <optgroup label="GPT-4oシリーズ（推奨）">
+                                <option value="gpt-4o">GPT-4o</option>
+                                <option value="gpt-4o-mini">GPT-4o-mini</option>
+                            </optgroup>
+                            <optgroup label="o1シリーズ（推論モデル）">
+                                <option value="o1">o1</option>
+                                <option value="o1-mini">o1-mini</option>
+                            </optgroup>
                         </select>
                     </div>
                     
-                    <!-- 従来通りのChatGPT API設定 -->
-                    <div id="traditionalFields">
+                    <div class="form-group">
+                        <label>外部データ読み込み（オプション）</label>
+                        <input type="text" id="externalDataPath" placeholder="例: keiba/ozz または keiba">
+                        <small>Firestoreのコレクション/ドキュメントを指定。プロンプト内で{external_data}として利用可能</small>
+                    </div>
+                    
+                    <div style="border: 1px solid #ddd; padding: 15px; margin: 20px 0;">
+                        <h3 style="margin-bottom: 15px;">メール自動送信設定</h3>
                         <div class="form-group">
-                            <label>プロンプトテンプレート</label>
-                            <textarea id="planPrompt" placeholder="変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日"></textarea>
+                            <label>
+                                <input type="checkbox" id="emailEnabled"> メール自動送信を有効にする
+                            </label>
                         </div>
-                        <div class="form-group">
-                            <label>使用モデル</label>
-                            <select id="planModel">
-                                <optgroup label="GPT-5シリーズ（最新）">
-                                    <option value="gpt-5">GPT-5</option>
-                                    <option value="gpt-5-chat-latest">GPT-5 Chat Latest</option>
-                                    <option value="gpt-5-mini">GPT-5 Mini</option>
-                                    <option value="gpt-5-nano">GPT-5 Nano</option>
-                                </optgroup>
-                                <optgroup label="o1シリーズ（推論モデル）">
-                                    <option value="o1-preview">o1-preview</option>
-                                    <option value="o1-mini">o1-mini</option>
-                                </optgroup>
-                                <optgroup label="GPT-4oシリーズ">
-                                    <option value="gpt-4o">GPT-4o</option>
-                                    <option value="gpt-4o-mini">GPT-4o-mini</option>
-                                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                                </optgroup>
-                                <optgroup label="旧モデル">
-                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                                </optgroup>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>メール送信時刻</label>
-                            <input type="time" id="planSendTime">
+                        <div id="emailFields" class="hidden">
+                            <div class="form-group">
+                                <label>送信頻度</label>
+                                <select id="emailFrequency" onchange="toggleEmailCustomFields()">
+                                    <option value="daily">毎日</option>
+                                    <option value="custom">カスタム指定</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>送信時刻</label>
+                                <input type="time" id="emailSendTime" value="09:00">
+                            </div>
+                            <div id="emailCustomFields" class="form-group hidden">
+                                <label>カスタム日付用スプレッドシートID</label>
+                                <input type="text" id="emailCustomSpreadsheetId" placeholder="A列にYYYY-MM-DD形式で日付を入力">
+                                <small>指定した日付のみ送信されます</small>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- GPTs利用時の設定 -->
-                    <div id="gptsFields" class="hidden">
+                    <div style="border: 1px solid #ddd; padding: 15px; margin: 20px 0;">
+                        <h3 style="margin-bottom: 15px;">NOTE自動投稿設定</h3>
                         <div class="form-group">
-                            <label>出力先スプレッドシートID</label>
-                            <input type="text" id="outputSpreadsheetId" placeholder="スプレッドシートのIDを入力">
-                            <small style="color: #666; display: block; margin-top: 5px;">
-                                ※ URLの「/d/」と「/edit」の間の文字列です<br>
-                                例: https://docs.google.com/spreadsheets/d/<strong>ABC123XYZ</strong>/edit
-                            </small>
+                            <label>
+                                <input type="checkbox" id="noteEnabled"> NOTE自動投稿を有効にする
+                            </label>
                         </div>
-                        
-                        <div style="border: 1px solid #ddd; padding: 15px; margin: 20px 0;">
-                            <h3 style="margin-bottom: 15px;">NOTE自動投稿設定</h3>
+                        <div id="noteFields" class="hidden">
                             <div class="form-group">
-                                <label>
-                                    <input type="checkbox" id="noteAutoPost" onchange="toggleNoteFields()"> NOTE自動投稿を有効にする
-                                </label>
+                                <label>NOTEアカウント（このプラン専用）</label>
+                                <input type="email" id="planNoteEmail" placeholder="このプラン専用のNOTEメールアドレス（オプション）">
+                                <small>空欄の場合はグローバル設定のアカウントを使用</small>
                             </div>
-                            <div id="noteFields" class="hidden">
-                                <div class="form-group">
-                                    <label>投稿頻度</label>
-                                    <select id="notePostFrequency" onchange="toggleNoteCustomFields()">
-                                        <option value="daily">毎日</option>
-                                        <option value="custom">カスタム指定</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>投稿時刻</label>
-                                    <input type="time" id="notePostTime" value="09:00">
-                                </div>
-                                <div id="noteCustomFields" class="form-group hidden">
-                                    <label>カスタム日付用スプレッドシートID</label>
-                                    <input type="text" id="noteCustomSpreadsheetId" placeholder="A1以降にYYYY-MM-DD形式で日付を入力">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div style="border: 1px solid #ddd; padding: 15px; margin: 20px 0;">
-                            <h3 style="margin-bottom: 15px;">メール自動送信設定</h3>
                             <div class="form-group">
-                                <label>
-                                    <input type="checkbox" id="emailAutoSend" onchange="toggleEmailFields()"> メール自動送信を有効にする
-                                </label>
+                                <label>NOTEパスワード</label>
+                                <input type="password" id="planNotePassword" placeholder="パスワード">
                             </div>
-                            <div id="emailFields" class="hidden">
-                                <div class="form-group">
-                                    <label>送信頻度</label>
-                                    <select id="emailSendFrequency" onchange="toggleEmailCustomFields()">
-                                        <option value="daily">毎日</option>
-                                        <option value="custom">カスタム指定</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>送信時刻</label>
-                                    <input type="time" id="emailSendTime" value="09:00">
-                                </div>
-                                <div id="emailCustomFields" class="form-group hidden">
-                                    <label>カスタム日付用スプレッドシートID</label>
-                                    <input type="text" id="emailCustomSpreadsheetId" placeholder="A1以降にYYYY-MM-DD形式で日付を入力">
-                                </div>
+                            <div class="form-group">
+                                <label>投稿頻度</label>
+                                <select id="noteFrequency" onchange="toggleNoteCustomFields()">
+                                    <option value="daily">毎日</option>
+                                    <option value="custom">カスタム指定</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>投稿時刻</label>
+                                <input type="time" id="notePostTime" value="09:00">
+                            </div>
+                            <div id="noteCustomFields" class="form-group hidden">
+                                <label>カスタム日付用スプレッドシートID</label>
+                                <input type="text" id="noteCustomSpreadsheetId" placeholder="A列にYYYY-MM-DD形式で日付を入力">
+                                <small>指定した日付のみ投稿されます</small>
+                            </div>
+                            <div class="form-group">
+                                <label>サムネイル画像URLマッピング（オプション）</label>
+                                <textarea id="thumbnailMapping" rows="4" placeholder="東京=https://example.com/tokyo.jpg&#10;大阪=https://example.com/osaka.jpg"></textarea>
+                                <small>key=value形式で改行区切り。記事ごとに動的に画像URLを選択できます</small>
                             </div>
                         </div>
                     </div>
@@ -980,6 +945,7 @@
             </div>
         </div>
     </div>
-    <script type="text/javascript" src="script.js"></script>
+    
+    <script src="script.js"></script>
 </body>
 </html>
