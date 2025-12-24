@@ -775,9 +775,15 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>プロンプトテンプレート</label>
-                        <textarea id="planPrompt" rows="6" placeholder="変数: {birthday}=生年月日, {external_data}=外部データ, {name-l}=姓, {name-f}=名"></textarea>
-                        <small>メール本文とNOTE記事の両方で使用されます</small>
+                        <label>ベースプロンプト</label>
+                        <textarea id="planBasePrompt" rows="6" placeholder="基本的な指示やロジック、出力形式などを記載"></textarea>
+                        <small>システムプロンプトとして事前にキャッシュされます（メール・NOTE共通）。サムネイルマッピングも自動的にここに含まれます。</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>個別指示</label>
+                        <textarea id="planIndividualInstruction" rows="4" placeholder="変数: {birthday}=生年月日, {external_data}=外部データ, {~}=分割時のアイテム名"></textarea>
+                        <small>配信ごとに変数が置換されます。メール送信時は自動で「メール文を生成してください」、NOTE投稿時は「NOTE記事を生成してください」が追加されます</small>
                     </div>
                     
                     <div class="form-group">
