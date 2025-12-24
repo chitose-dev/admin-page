@@ -501,9 +501,19 @@ async function showPlanDetail(planId) {
             </div>
             ` : ''}
             <div class="info-row">
-                <div class="info-label">プロンプト:</div>
-                <div class="info-value" style="white-space: pre-wrap;">${plan.prompt || ''}</div>
+                <div class="info-label">ベースプロンプト:</div>
+                <div class="info-value" style="white-space: pre-wrap;">${plan.basePrompt || ''}</div>
             </div>
+            <div class="info-row">
+                <div class="info-label">個別指示:</div>
+                <div class="info-value" style="white-space: pre-wrap;">${plan.individualInstruction || ''}</div>
+            </div>
+            ${plan.promptCacheId ? `
+            <div class="info-row">
+                <div class="info-label">キャッシュID:</div>
+                <div class="info-value">${plan.promptCacheId}</div>
+            </div>
+            ` : ''}
         `;
         
         planDetailInfo.innerHTML = detailsHTML;
@@ -559,6 +569,8 @@ function showAddPlanModal() {
     document.getElementById('planForm').reset();
     document.getElementById('planId').value = '';
     document.getElementById('planModel').value = 'gpt-4o';
+    document.getElementById('planBasePrompt').value = '';
+    document.getElementById('planIndividualInstruction').value = '';
     
     // 頻度フィールドの初期化
     document.getElementById('emailFrequency').value = 'daily';
@@ -581,9 +593,11 @@ async function editPlan(id) {
         document.getElementById('planModalTitle').textContent = 'プラン編集';
         document.getElementById('planId').value = plan.id;
         document.getElementById('planName').value = plan.name;
-        document.getElementById('planPrompt').value = plan.prompt || '';
+        document.getElementById('planBasePrompt').value = plan.basePrompt || '';
+        document.getElementById('planIndividualInstruction').value = plan.individualInstruction || '';
         document.getElementById('planModel').value = plan.model || 'gpt-4o';
         document.getElementById('externalDataPath').value = plan.externalDataPath || '';
+
         
         // メール設定
         document.getElementById('emailEnabled').checked = plan.emailEnabled || false;
@@ -625,12 +639,12 @@ async function savePlan() {
     
     const id = document.getElementById('planId').value;
     const name = document.getElementById('planName').value;
-    const prompt = document.getElementById('planPrompt').value;
+    const basePrompt = document.getElementById('planBasePrompt').value;
+    const individualInstruction = document.getElementById('planIndividualInstruction').value;
     const model = document.getElementById('planModel').value;
     const externalDataPath = document.getElementById('externalDataPath').value;
     
     console.log('📝 基本情報取得:', { id, name, model });
-    
     const emailEnabled = document.getElementById('emailEnabled').checked;
     const emailFrequency = document.getElementById('emailFrequency').value;
     const emailSendTime = document.getElementById('emailSendTime').value;
