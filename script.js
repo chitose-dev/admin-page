@@ -634,6 +634,7 @@ function editPlanFromDetail() {
 }
 
 // プラン保存
+// プラン保存
 async function savePlan() {
     console.log('🔵 savePlan関数が呼ばれました');
     
@@ -645,6 +646,7 @@ async function savePlan() {
     const externalDataPath = document.getElementById('externalDataPath').value;
     
     console.log('📝 基本情報取得:', { id, name, model });
+    
     const emailEnabled = document.getElementById('emailEnabled').checked;
     const emailFrequency = document.getElementById('emailFrequency').value;
     const emailSendTime = document.getElementById('emailSendTime').value;
@@ -668,7 +670,8 @@ async function savePlan() {
 
     const data = {
         name: name,
-        prompt: prompt,
+        basePrompt: basePrompt,
+        individualInstruction: individualInstruction,
         model: model,
         externalDataPath: externalDataPath,
         emailEnabled: emailEnabled,
