@@ -1,7 +1,7 @@
 // ========================================
 // 設定
 // ========================================
-const API_BASE_URL = 'https://gpts-email-system-v5-fbqowedyyq-an.a.run.app';
+const API_BASE_URL = 'https://gpts-email-system-v7-fbqowedyyq-an.a.run.app';
 
 // リトライ設定
 const MAX_API_RETRIES = 2;
